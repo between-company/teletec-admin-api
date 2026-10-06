@@ -9,6 +9,9 @@ import { SessionsModule } from './modules/sessions/sessions.module.js';
 import { ResponseInterceptor } from './common/http/interceptors/response.interceptor.js';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { HttpExceptionFilter } from './common/http/filters/http-exception.filter.js';
+import { AuditModule } from './modules/audit/audit.module.js';
+import { RequestContextModule } from './common/context/request-context.module.js';
+import { AreasModule } from './modules/areas/areas.module.js';
 
 @Module({
   imports: [
@@ -20,9 +23,12 @@ import { HttpExceptionFilter } from './common/http/filters/http-exception.filter
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => createTypeOrmConfig(configService.getOrThrow<string>('DATABASE_URL')),
     }),
+    RequestContextModule,
     HealthModule,
     UsersModule,
     SessionsModule,
+    AuditModule,
+    AreasModule,
   ],
   providers: [
     {

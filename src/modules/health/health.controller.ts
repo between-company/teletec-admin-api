@@ -1,8 +1,9 @@
 import { Controller, Get } from '@nestjs/common'
+import { API_VERSION } from '../../common/constants/api-version.constants.js'
 
 @Controller({
   path: 'health',
-  version: '1'
+  version: API_VERSION.V1
 })
 export class HealthController {
   @Get()
