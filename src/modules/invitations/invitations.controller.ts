@@ -1,11 +1,13 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
   ParseUUIDPipe,
-  Post
+  Post,
+  Query
 } from '@nestjs/common'
 
 import {
@@ -27,6 +29,10 @@ import {
 } from '../../common/swagger/decorators/api-error-response.decorator.js'
 
 import {
+  ApiPaginatedResponse
+} from '../../common/swagger/decorators/api-paginated-response.decorator.js'
+
+import {
   ApiSuccessResponse
 } from '../../common/swagger/decorators/api-success-response.decorator.js'
 
@@ -43,8 +49,16 @@ import {
 } from './dto/create-invitation.dto.js'
 
 import {
+  InvitationDetailResponseDto
+} from './dto/invitation-detail-response.dto.js'
+
+import {
   InvitationResponseDto
 } from './dto/invitation-response.dto.js'
+
+import {
+  ListInvitationsQueryDto
+} from './dto/list-invitations-query.dto.js'
 
 import {
   InvitationsService
@@ -62,6 +76,43 @@ export class InvitationsController {
     private readonly invitationsService:
       InvitationsService
   ) {}
+
+  @Get()
+  @ApiOperation({
+    summary: 'List invitations'
+  })
+  @ApiPaginatedResponse(InvitationDetailResponseDto)
+  @ApiErrorResponse({
+    status: HttpStatus.BAD_REQUEST,
+    code: ERROR_CODES.VALIDATION_ERROR,
+    message: 'Validation failed'
+  })
+  findAll(
+    @Query() query: ListInvitationsQueryDto
+  ) {
+    return this.invitationsService.findAll(query)
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Get invitation by ID'
+  })
+  @ApiParam({
+    name: 'id',
+    format: 'uuid',
+    description: 'Invitation ID'
+  })
+  @ApiSuccessResponse(InvitationDetailResponseDto)
+  @ApiErrorResponse({
+    status: HttpStatus.NOT_FOUND,
+    code: ERROR_CODES.INVITATION_NOT_FOUND,
+    message: 'Invitation not found'
+  })
+  findById(
+    @Param('id', ParseUUIDPipe) id: string
+  ) {
+    return this.invitationsService.findById(id)
+  }
 
   @Post()
   @ApiOperation({
@@ -153,7 +204,7 @@ export class InvitationsController {
   @Post(':id/resend')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Resend an invitation using a new token'
+    summary: 'Issue a new invitation for the same pending user'
   })
   @ApiParam({
     name: 'id',
@@ -169,17 +220,32 @@ export class InvitationsController {
   @ApiErrorResponse({
     status: HttpStatus.NOT_FOUND,
     code: ERROR_CODES.INVITATION_NOT_FOUND,
-    message: 'Invitation not found'
+    message: 'Invitation not found',
+    examples: [
+      {
+        code: ERROR_CODES.INVITATION_NOT_FOUND,
+        message: 'Invitation not found'
+      },
+      {
+        code: ERROR_CODES.USER_NOT_FOUND,
+        message: 'User not found'
+      }
+    ]
   })
   @ApiErrorResponse({
     status: HttpStatus.CONFLICT,
     code: ERROR_CODES.INVITATION_ALREADY_USED,
-    message: 'Invitation has already been used'
-  })
-  @ApiErrorResponse({
-    status: HttpStatus.CONFLICT,
-    code: ERROR_CODES.INVITATION_REVOKED,
-    message: 'Invitation has already been revoked'
+    message: 'Invitation has already been used',
+    examples: [
+      {
+        code: ERROR_CODES.INVITATION_ALREADY_USED,
+        message: 'Invitation has already been used'
+      },
+      {
+        code: ERROR_CODES.USER_ALREADY_ACTIVATED,
+        message: 'User has already been activated'
+      }
+    ]
   })
   async resend(
     @Param('id', ParseUUIDPipe) id: string

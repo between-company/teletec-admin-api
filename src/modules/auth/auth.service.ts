@@ -22,6 +22,7 @@ import {
   
   import type { AccessTokenPayload } from './interfaces/access-token-payload.interface.js'
   import type { LoginResult } from './interfaces/login-result.interface.js'
+  import { User } from '../users/entities/user.entity.js'
   import { SessionsRepository } from './repositories/sessions.repository.js'
 import { RefreshResult } from './interfaces/refresh-result.interface.js'
   
@@ -212,6 +213,16 @@ import { RefreshResult } from './interfaces/refresh-result.interface.js'
             manager
           )
     
+          const user = await manager.getRepository(User).findOne({
+            where: {
+              id: session.userId
+            }
+          })
+
+          if (!user) {
+            throw this.invalidSessionException()
+          }
+
           const expiresIn = this.getAccessTokenExpiresInSeconds()
     
           const payload: AccessTokenPayload = {
@@ -229,7 +240,13 @@ import { RefreshResult } from './interfaces/refresh-result.interface.js'
           return {
             accessToken,
             refreshToken: newRefreshToken,
-            expiresIn
+            expiresIn,
+            user: {
+              id: user.id,
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName
+            }
           }
         }
       )

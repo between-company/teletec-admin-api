@@ -42,6 +42,14 @@ import {
 } from './dto/create-user.dto.js'
 
 import {
+  DeleteUserResponseDto
+} from './dto/delete-user-response.dto.js'
+
+import {
+  UpdateUserDto
+} from './dto/update-user.dto.js'
+
+import {
   ListUsersQueryDto
 } from './dto/list-users-query.dto.js'
 
@@ -49,6 +57,10 @@ import {
   UserAreaResponseDto,
   UserResponseDto
 } from './dto/user-response.dto.js'
+
+import {
+  Area
+} from '../areas/entities/area.entity.js'
 
 import {
   User
@@ -93,17 +105,7 @@ export class UsersService {
     })
 
     const data = items.map((user) =>
-      this.toResponseDto(
-        user,
-        (user.userAreas ?? [])
-          .map((userArea) => ({
-            id: userArea.area.id,
-            name: userArea.area.name
-          }))
-          .sort((left, right) =>
-            left.name.localeCompare(right.name)
-          )
-      )
+      this.toResponse(user)
     )
 
     return paginated(
@@ -113,6 +115,305 @@ export class UsersService {
         limit: filters.limit,
         totalItems
       })
+    )
+  }
+
+  async findById(
+    id: string
+  ): Promise<UserResponseDto> {
+    const user = await this.usersRepository.findByIdWithAreas(id)
+
+    if (!user) {
+      throw this.userNotFoundException()
+    }
+
+    return this.toResponse(user)
+  }
+
+  async update(
+    id: string,
+    dto: UpdateUserDto
+  ): Promise<UserResponseDto> {
+    const current = await this.usersRepository.findByIdWithAreas(id)
+
+    if (!current) {
+      throw this.userNotFoundException()
+    }
+
+    const currentAreas = this.mapAreas(current)
+    const preview = this.applyUserChanges(
+      current,
+      currentAreas.map((area) => area.id),
+      dto
+    )
+
+    this.assertPhonePair(
+      preview.phoneCountryCode,
+      preview.phone
+    )
+
+    if (!preview.hasChanges) {
+      return this.toResponse(current)
+    }
+
+    if (preview.areaIds) {
+      await this.assertActiveAreas(preview.areaIds)
+    }
+
+    return this.dataSource.transaction(
+      async (manager) => {
+        const user = await this.usersRepository.findByIdForUpdate(
+          id,
+          manager
+        )
+
+        if (!user) {
+          throw this.userNotFoundException()
+        }
+
+        const memberships = await this.userAreasRepository.findByUserId(
+          id,
+          manager
+        )
+        const currentAreaIds = memberships.map(
+          (membership) => membership.areaId
+        )
+        const before = {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          phoneCountryCode: user.phoneCountryCode,
+          phone: user.phone,
+          isActive: user.isActive,
+          areaIds: currentAreaIds
+        }
+        const next = this.applyUserChanges(
+          user,
+          currentAreaIds,
+          dto
+        )
+
+        this.assertPhonePair(
+          next.phoneCountryCode,
+          next.phone
+        )
+
+        if (!next.hasChanges) {
+          user.userAreas = memberships
+
+          return this.toResponse(user)
+        }
+
+        let areas = memberships
+          .filter((membership) => membership.area)
+          .map((membership) => membership.area)
+
+        if (next.areaIds) {
+          areas = await this.assertActiveAreas(
+            next.areaIds,
+            manager
+          )
+
+          await this.userAreasRepository.deleteByUserId(
+            user.id,
+            manager
+          )
+
+          const userAreas = this.userAreasRepository.createMany(
+            user.id,
+            next.areaIds,
+            manager
+          )
+
+          await this.userAreasRepository.saveMany(
+            userAreas,
+            manager
+          )
+        }
+
+        user.firstName = next.firstName
+        user.lastName = next.lastName
+        user.phoneCountryCode = next.phoneCountryCode
+        user.phone = next.phone
+        user.isActive = next.isActive
+
+        const savedUser = await this.usersRepository.save(
+          user,
+          manager
+        )
+
+        const after = {
+          firstName: savedUser.firstName,
+          lastName: savedUser.lastName,
+          phoneCountryCode: savedUser.phoneCountryCode,
+          phone: savedUser.phone,
+          isActive: savedUser.isActive,
+          areaIds: areas.map((area) => area.id)
+        }
+        const onlyStatusChanged =
+          before.firstName === after.firstName &&
+          before.lastName === after.lastName &&
+          before.phoneCountryCode === after.phoneCountryCode &&
+          before.phone === after.phone &&
+          this.sameIds(before.areaIds, after.areaIds) &&
+          before.isActive !== after.isActive
+
+        await this.auditService.create(
+          {
+            action: onlyStatusChanged
+              ? after.isActive
+                ? AuditAction.USER_ACTIVATED
+                : AuditAction.USER_DEACTIVATED
+              : AuditAction.USER_UPDATED,
+            entityType: AuditEntityType.USER,
+            entityId: savedUser.id,
+            targetSnapshot: {
+              name: `${savedUser.firstName} ${savedUser.lastName}`,
+              email: savedUser.email
+            },
+            before,
+            after
+          },
+          manager
+        )
+
+        return this.toResponseDto(
+          savedUser,
+          areas
+            .map((area) => ({
+              id: area.id,
+              name: area.name
+            }))
+            .sort((left, right) =>
+              left.name.localeCompare(right.name)
+            )
+        )
+      }
+    )
+  }
+
+  async remove(
+    id: string
+  ): Promise<DeleteUserResponseDto> {
+    return this.dataSource.transaction(
+      async (manager) => {
+        const user = await this.usersRepository.findByIdForUpdate(
+          id,
+          manager
+        )
+
+        if (!user) {
+          throw this.userNotFoundException()
+        }
+
+        const removed = await this.usersRepository.softRemove(
+          user,
+          manager
+        )
+
+        await this.auditService.create(
+          {
+            action: AuditAction.USER_DELETED,
+            entityType: AuditEntityType.USER,
+            entityId: removed.id,
+            targetSnapshot: {
+              name: `${removed.firstName} ${removed.lastName}`,
+              email: removed.email
+            },
+            before: {
+              deletedAt: null
+            },
+            after: {
+              deletedAt: removed.deletedAt
+            }
+          },
+          manager
+        )
+
+        return {
+          id: removed.id,
+          deletedAt: removed.deletedAt!
+        }
+      }
+    )
+  }
+
+  async restore(
+    id: string
+  ): Promise<UserResponseDto> {
+    return this.dataSource.transaction(
+      async (manager) => {
+        const user = await this.usersRepository.findByIdForUpdate(
+          id,
+          manager,
+          true
+        )
+
+        if (!user) {
+          throw this.userNotFoundException()
+        }
+
+        if (!user.deletedAt) {
+          throw new ApiException({
+            statusCode: HttpStatus.CONFLICT,
+            code: ERROR_CODES.USER_NOT_DELETED,
+            message: 'User is not deleted'
+          })
+        }
+
+        const deletedAt = user.deletedAt
+
+        user.deletedById = null
+
+        const recovered = await this.usersRepository.recover(
+          user,
+          manager
+        )
+
+        recovered.deletedById = null
+        recovered.deletedAt = null
+
+        await this.usersRepository.save(
+          recovered,
+          manager
+        )
+
+        await this.auditService.create(
+          {
+            action: AuditAction.USER_RESTORED,
+            entityType: AuditEntityType.USER,
+            entityId: recovered.id,
+            targetSnapshot: {
+              name: `${recovered.firstName} ${recovered.lastName}`,
+              email: recovered.email
+            },
+            before: {
+              deletedAt
+            },
+            after: {
+              deletedAt: null
+            }
+          },
+          manager
+        )
+
+        const memberships = await this.userAreasRepository.findByUserId(
+          recovered.id,
+          manager
+        )
+
+        recovered.userAreas = memberships
+
+        return this.toResponse(recovered)
+      }
+    )
+  }
+
+  toResponse(
+    user: User
+  ): UserResponseDto {
+    return this.toResponseDto(
+      user,
+      this.mapAreas(user)
     )
   }
 
@@ -394,6 +695,128 @@ export class UsersService {
         name: area.name
       }))
     )
+  }
+
+  private applyUserChanges(
+    user: User,
+    currentAreaIds: string[],
+    dto: UpdateUserDto
+  ): {
+    firstName: string
+    lastName: string
+    phoneCountryCode: string | null
+    phone: string | null
+    isActive: boolean
+    areaIds?: string[]
+    hasChanges: boolean
+  } {
+    const firstName = dto.firstName ?? user.firstName
+    const lastName = dto.lastName ?? user.lastName
+    const phoneCountryCode = dto.phoneCountryCode !== undefined
+      ? this.emptyToNull(dto.phoneCountryCode)
+      : user.phoneCountryCode
+    const phone = dto.phone !== undefined
+      ? this.emptyToNull(dto.phone)
+      : user.phone
+    const isActive = dto.isActive ?? user.isActive
+    const areasChanged = dto.areaIds !== undefined &&
+      !this.sameIds(currentAreaIds, dto.areaIds)
+
+    return {
+      firstName,
+      lastName,
+      phoneCountryCode,
+      phone,
+      isActive,
+      areaIds: areasChanged ? dto.areaIds : undefined,
+      hasChanges:
+        firstName !== user.firstName ||
+        lastName !== user.lastName ||
+        phoneCountryCode !== user.phoneCountryCode ||
+        phone !== user.phone ||
+        isActive !== user.isActive ||
+        areasChanged
+    }
+  }
+
+  private emptyToNull(
+    value: string | null
+  ): string | null {
+    if (value === null) {
+      return null
+    }
+
+    const trimmed = value.trim()
+
+    return trimmed.length === 0 ? null : trimmed
+  }
+
+  private assertPhonePair(
+    phoneCountryCode: string | null,
+    phone: string | null
+  ): void {
+    if (Boolean(phoneCountryCode) !== Boolean(phone)) {
+      throw new ApiException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        code: ERROR_CODES.USER_PHONE_INCOMPLETE,
+        message: 'Phone and country code must be provided together'
+      })
+    }
+  }
+
+  private async assertActiveAreas(
+    areaIds: string[],
+    manager?: EntityManager
+  ): Promise<Area[]> {
+    const areas = await this.areasService.findActiveByIds(
+      areaIds,
+      manager
+    )
+
+    if (areas.length !== areaIds.length) {
+      throw new ApiException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        code: ERROR_CODES.USER_INVALID_AREAS,
+        message: 'One or more areas are invalid or inactive'
+      })
+    }
+
+    return areas
+  }
+
+  private sameIds(
+    left: string[],
+    right: string[]
+  ): boolean {
+    const sortedLeft = [...left].sort()
+    const sortedRight = [...right].sort()
+
+    return sortedLeft.join() === sortedRight.join()
+  }
+
+  private mapAreas(
+    user: User
+  ): UserAreaResponseDto[] {
+    return (user.userAreas ?? [])
+      .flatMap((userArea) =>
+        userArea.area
+          ? [{
+              id: userArea.area.id,
+              name: userArea.area.name
+            }]
+          : []
+      )
+      .sort((left, right) =>
+        left.name.localeCompare(right.name)
+      )
+  }
+
+  private userNotFoundException(): ApiException {
+    return new ApiException({
+      statusCode: HttpStatus.NOT_FOUND,
+      code: ERROR_CODES.USER_NOT_FOUND,
+      message: 'User not found'
+    })
   }
 
   private toResponseDto(
