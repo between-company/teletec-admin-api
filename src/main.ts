@@ -10,6 +10,14 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService)
   const port = configService.getOrThrow<number>('PORT')
+  const frontendUrl = configService
+    .getOrThrow<string>('FRONTEND_URL')
+    .replace(/\/$/, '')
+
+  app.enableCors({
+    origin: frontendUrl,
+    credentials: true
+  })
   
   const swaggerConfig = new DocumentBuilder()
     .setTitle('TELETEC Admin API')
