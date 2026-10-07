@@ -1,8 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-import { AppModule } from './app.module.js';
 import { ValidationPipe, VersioningType } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config';
+import cookieParser from 'cookie-parser'
+import { AppModule } from './app.module.js';
 import { DEFAULT_API_VERSION } from './common/constants/api-version.constants.js';
 
 async function bootstrap() {
@@ -31,6 +32,7 @@ async function bootstrap() {
       transform: true
     })
   )
+  app.use(cookieParser())
 
   const swaggerDocument = SwaggerModule.createDocument(
     app,
