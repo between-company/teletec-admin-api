@@ -3,3 +3,4 @@ engineStrict: true
 allowBuilds:
   '@scarf/scarf': true
   argon2: true
+  esbuild: true
