@@ -234,6 +234,72 @@ import { RefreshResult } from './interfaces/refresh-result.interface.js'
         }
       )
     }
+
+    async logout(
+      refreshToken: string
+    ): Promise<void> {
+      const refreshTokenHash = this.hashRefreshToken(
+        refreshToken
+      )
+
+      await this.dataSource.transaction(
+        async manager => {
+          const session =
+            await this.sessionsRepository.findByRefreshTokenHashForUpdate(
+              refreshTokenHash,
+              manager
+            )
+
+          if (!session) {
+            throw this.invalidSessionException()
+          }
+
+          if (session.revokedAt) {
+            throw this.invalidSessionException()
+          }
+
+          if (session.expiresAt.getTime() <= Date.now()) {
+            throw this.invalidSessionException()
+          }
+
+          const revokedAt = new Date()
+
+          session.revokedAt = revokedAt
+          session.revokedReason = 'logout'
+          session.revokedById = session.userId
+
+          await this.sessionsRepository.save(
+            session,
+            manager
+          )
+
+          this.requestContextService.setActor(
+            session.userId,
+            session.id
+          )
+
+          await this.auditService.create(
+            {
+              action: AuditAction.SESSION_REVOKED,
+              entityType: AuditEntityType.SESSION,
+              entityId: session.id,
+              targetSnapshot: {
+                id: session.id,
+                userId: session.userId
+              },
+              before: {
+                revokedAt: null
+              },
+              after: {
+                revokedAt,
+                revokedReason: session.revokedReason
+              }
+            },
+            manager
+          )
+        }
+      )
+    }
   
     private generateRefreshToken(): string {
       return randomBytes(64).toString('hex')
