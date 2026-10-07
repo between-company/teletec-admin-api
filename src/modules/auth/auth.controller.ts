@@ -129,7 +129,8 @@
 
       return {
         accessToken: result.accessToken,
-        expiresIn: result.expiresIn
+        expiresIn: result.expiresIn,
+        user: result.user
       }
     }
 

@@ -49,6 +49,11 @@ import {
 } from '../users/users.service.js'
 
 import {
+  createPaginationMeta,
+  paginated
+} from '../../common/http/helpers/api-response.helper.js'
+
+import {
   AcceptInvitationDto
 } from './dto/accept-invitation.dto.js'
 
@@ -61,8 +66,16 @@ import {
 } from './dto/create-invitation.dto.js'
 
 import {
+  InvitationDetailResponseDto
+} from './dto/invitation-detail-response.dto.js'
+
+import {
   InvitationResponseDto
 } from './dto/invitation-response.dto.js'
+
+import {
+  ListInvitationsQueryDto
+} from './dto/list-invitations-query.dto.js'
 
 import {
   Invitation
@@ -105,6 +118,49 @@ export class InvitationsService {
     private readonly configService:
       ConfigService
   ) {}
+
+  async findAll(
+    filters: ListInvitationsQueryDto
+  ) {
+    const {
+      items,
+      totalItems
+    } = await this.invitationsRepository.findAll({
+      status: filters.status,
+      search: filters.search,
+      userId: filters.userId,
+      page: filters.page,
+      limit: filters.limit
+    })
+
+    return paginated(
+      items.map((invitation) =>
+        this.toDetail(invitation)
+      ),
+      createPaginationMeta({
+        page: filters.page,
+        limit: filters.limit,
+        totalItems
+      })
+    )
+  }
+
+  async findById(
+    id: string
+  ): Promise<InvitationDetailResponseDto> {
+    const invitation =
+      await this.invitationsRepository.findDetailById(id)
+
+    if (!invitation) {
+      throw new ApiException({
+        statusCode: HttpStatus.NOT_FOUND,
+        code: ERROR_CODES.INVITATION_NOT_FOUND,
+        message: 'Invitation not found'
+      })
+    }
+
+    return this.toDetail(invitation)
+  }
 
   async inviteUser(
     dto: CreateInvitationDto,
@@ -344,14 +400,6 @@ export class InvitationsService {
           })
         }
   
-        if (invitation.revokedAt) {
-          throw new ApiException({
-            statusCode: HttpStatus.CONFLICT,
-            code: ERROR_CODES.INVITATION_REVOKED,
-            message: 'Invitation has already been revoked'
-          })
-        }
-  
         const invitationWithUser =
           await this.invitationsRepository.findByIdWithUser(
             invitation.id,
@@ -366,7 +414,10 @@ export class InvitationsService {
           })
         }
   
-        if (invitationWithUser.user.isActive) {
+        if (
+          invitationWithUser.user.isActive ||
+          invitationWithUser.user.activatedAt
+        ) {
           throw new ApiException({
             statusCode: HttpStatus.CONFLICT,
             code: ERROR_CODES.USER_ALREADY_ACTIVATED,
@@ -374,14 +425,17 @@ export class InvitationsService {
           })
         }
   
-        const revokedAt = new Date()
+        let revokedAt = invitation.revokedAt
   
-        invitation.revokedAt = revokedAt
+        if (!revokedAt) {
+          revokedAt = new Date()
+          invitation.revokedAt = revokedAt
   
-        await this.invitationsRepository.save(
-          invitation,
-          manager
-        )
+          await this.invitationsRepository.save(
+            invitation,
+            manager
+          )
+        }
   
         const {
           invitation: newInvitation,
@@ -572,6 +626,22 @@ export class InvitationsService {
         }
       }
     )
+  }
+
+  private toDetail(
+    invitation: Invitation
+  ): InvitationDetailResponseDto {
+    return {
+      id: invitation.id,
+      expiresAt: invitation.expiresAt,
+      usedAt: invitation.usedAt,
+      revokedAt: invitation.revokedAt,
+      user: this.usersService.toResponse(
+        invitation.user
+      ),
+      createdAt: invitation.createdAt,
+      updatedAt: invitation.updatedAt
+    }
   }
 
   private validateInvitation(

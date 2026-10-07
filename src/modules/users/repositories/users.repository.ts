@@ -121,6 +121,64 @@ export class UsersRepository {
     }
   }
 
+  findByIdWithAreas(
+    id: string
+  ): Promise<User | null> {
+    return this.repository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.userAreas', 'userArea')
+      .leftJoinAndSelect('userArea.area', 'area')
+      .select([
+        'user.id',
+        'user.email',
+        'user.firstName',
+        'user.lastName',
+        'user.phoneCountryCode',
+        'user.phone',
+        'user.isActive',
+        'user.activatedAt',
+        'user.createdAt',
+        'user.updatedAt',
+        'userArea.id',
+        'userArea.userId',
+        'userArea.areaId',
+        'area.id',
+        'area.name'
+      ])
+      .where('user.id = :id', { id })
+      .getOne()
+  }
+
+  findByIdForUpdate(
+    id: string,
+    manager: EntityManager,
+    withDeleted = false
+  ): Promise<User | null> {
+    return manager.getRepository(User).findOne({
+      where: {
+        id
+      },
+      withDeleted,
+      lock: {
+        mode: 'pessimistic_write'
+      }
+    })
+  }
+
+  softRemove(
+    user: User,
+    manager: EntityManager
+  ): Promise<User> {
+    return manager.getRepository(User).softRemove(user)
+  }
+
+  recover(
+    user: User,
+    manager: EntityManager
+  ): Promise<User> {
+    return manager.getRepository(User).recover(user)
+  }
+
   findById(
     id: string,
     manager?: EntityManager

@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
+import { AuthenticatedUserDto } from './login-response.dto.js'
+
 export class RefreshResponseDto {
   @ApiProperty({
     description: 'New JWT access token'
@@ -11,4 +13,9 @@ export class RefreshResponseDto {
     description: 'Access token lifetime in seconds'
   })
   expiresIn!: number
+
+  @ApiProperty({
+    type: () => AuthenticatedUserDto
+  })
+  user!: AuthenticatedUserDto
 }
