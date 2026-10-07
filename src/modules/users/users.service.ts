@@ -33,12 +33,26 @@ import {
 } from '../audit/enums/audit-entity-type.enum.js'
 
 import {
+  createPaginationMeta,
+  paginated
+} from '../../common/http/helpers/api-response.helper.js'
+
+import {
   CreateUserDto
 } from './dto/create-user.dto.js'
 
 import {
+  ListUsersQueryDto
+} from './dto/list-users-query.dto.js'
+
+import {
+  UserAreaResponseDto,
   UserResponseDto
 } from './dto/user-response.dto.js'
+
+import {
+  User
+} from './entities/user.entity.js'
 
 import {
   UserAreasRepository
@@ -63,6 +77,44 @@ export class UsersService {
     private readonly dataSource:
       DataSource
   ) {}
+
+  async findAll(
+    filters: ListUsersQueryDto
+  ) {
+    const {
+      items,
+      totalItems
+    } = await this.usersRepository.findAll({
+      isActive: filters.isActive,
+      search: filters.search,
+      areaId: filters.areaId,
+      page: filters.page,
+      limit: filters.limit
+    })
+
+    const data = items.map((user) =>
+      this.toResponseDto(
+        user,
+        (user.userAreas ?? [])
+          .map((userArea) => ({
+            id: userArea.area.id,
+            name: userArea.area.name
+          }))
+          .sort((left, right) =>
+            left.name.localeCompare(right.name)
+          )
+      )
+    )
+
+    return paginated(
+      data,
+      createPaginationMeta({
+        page: filters.page,
+        limit: filters.limit,
+        totalItems
+      })
+    )
+  }
 
   async createPending(
     dto: CreateUserDto,
@@ -335,34 +387,31 @@ export class UsersService {
       manager
     )
 
+    return this.toResponseDto(
+      savedUser,
+      areas.map((area) => ({
+        id: area.id,
+        name: area.name
+      }))
+    )
+  }
+
+  private toResponseDto(
+    user: User,
+    areas: UserAreaResponseDto[]
+  ): UserResponseDto {
     return {
-      id:
-        savedUser.id,
-      email:
-        savedUser.email,
-      firstName:
-        savedUser.firstName,
-      lastName:
-        savedUser.lastName,
-      phoneCountryCode:
-        savedUser.phoneCountryCode,
-      phone:
-        savedUser.phone,
-      isActive:
-        savedUser.isActive,
-      activatedAt:
-        savedUser.activatedAt,
-      areas:
-        areas.map(area => ({
-          id:
-            area.id,
-          name:
-            area.name
-        })),
-      createdAt:
-        savedUser.createdAt,
-      updatedAt:
-        savedUser.updatedAt
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phoneCountryCode: user.phoneCountryCode,
+      phone: user.phone,
+      isActive: user.isActive,
+      activatedAt: user.activatedAt,
+      areas,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
     }
   }
 }

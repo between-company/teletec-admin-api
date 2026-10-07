@@ -11,7 +11,7 @@ const envSchema = z.object({
   .min(1, 'DATABASE_URL is required'),
   RESEND_API_KEY: z.string().min(1),
   EMAIL_FROM: z.string().min(1),
-  FRONTEND_URL: z.string().url(),
+  FRONTEND_URL: z.url(),
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_ACCESS_EXPIRES_IN: z.string().min(1),
   SESSION_EXPIRES_DAYS: z.coerce.number().int().min(1).max(90),
