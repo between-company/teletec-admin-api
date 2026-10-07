@@ -26,6 +26,7 @@
   import { AUTH_COOKIE } from './constants/auth.constants.js'
   import { LoginDto } from './dto/login.dto.js'
   import { LoginResponseDto } from './dto/login-response.dto.js'
+  import { LogoutResponseDto } from './dto/logout-response.dto.js'
   import { RefreshResponseDto } from './dto/refresh-response.dto.js'
   import { ApiException } from '../../common/http/exceptions/api.exception.js'
   
@@ -132,6 +133,54 @@
       }
     }
 
+    @Post('logout')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+      summary: 'Revoke the current session and clear the refresh token'
+    })
+    @ApiSuccessResponse(
+      LogoutResponseDto,
+      {
+        status: HttpStatus.OK
+      }
+    )
+    @ApiErrorResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      code: ERROR_CODES.AUTH_REFRESH_TOKEN_MISSING,
+      message: 'Refresh token is missing'
+    })
+    @ApiErrorResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      code: ERROR_CODES.AUTH_INVALID_SESSION,
+      message: 'Invalid or expired session'
+    })
+    async logout(
+      @Req() request: Request,
+      @Res({ passthrough: true }) response: Response
+    ): Promise<LogoutResponseDto> {
+      const refreshToken =
+        request.cookies?.[AUTH_COOKIE.REFRESH_TOKEN]
+
+      this.clearRefreshTokenCookie(response)
+
+      if (
+        !refreshToken ||
+        typeof refreshToken !== 'string'
+      ) {
+        throw new ApiException({
+          statusCode: HttpStatus.UNAUTHORIZED,
+          code: ERROR_CODES.AUTH_REFRESH_TOKEN_MISSING,
+          message: 'Refresh token is missing'
+        })
+      }
+
+      await this.authService.logout(refreshToken)
+
+      return {
+        loggedOut: true
+      }
+    }
+
     private setRefreshTokenCookie(
       response: Response,
       refreshToken: string
@@ -141,18 +190,11 @@
           'SESSION_EXPIRES_DAYS'
         )
     
-      const isProduction =
-        this.configService.get<string>('NODE_ENV') ===
-        'production'
-    
       response.cookie(
         AUTH_COOKIE.REFRESH_TOKEN,
         refreshToken,
         {
-          httpOnly: true,
-          secure: isProduction,
-          sameSite: 'lax',
-          path: '/api/v1/auth',
+          ...this.refreshTokenCookieOptions(),
           maxAge:
             sessionExpiresDays *
             24 *
@@ -161,5 +203,32 @@
             1000
         }
       )
+    }
+
+    private clearRefreshTokenCookie(
+      response: Response
+    ): void {
+      response.clearCookie(
+        AUTH_COOKIE.REFRESH_TOKEN,
+        this.refreshTokenCookieOptions()
+      )
+    }
+
+    private refreshTokenCookieOptions(): {
+      httpOnly: true
+      secure: boolean
+      sameSite: 'lax'
+      path: '/api/v1/auth'
+    } {
+      const isProduction =
+        this.configService.get<string>('NODE_ENV') ===
+        'production'
+
+      return {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+        path: '/api/v1/auth'
+      }
     }
   }
