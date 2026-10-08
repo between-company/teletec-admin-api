@@ -13,6 +13,7 @@ import { AuthController } from './auth.controller.js'
 import { AuthService } from './auth.service.js'
 import { Session } from '../sessions/entities/session.entity.js'
 import { SessionsRepository } from './repositories/sessions.repository.js'
+import { AccessTokenGuard } from './guards/access-token.guard.js'
 
 @Module({
   imports: [
@@ -40,12 +41,14 @@ import { SessionsRepository } from './repositories/sessions.repository.js'
   ],
   providers: [
     SessionsRepository,
-    AuthService
+    AuthService,
+    AccessTokenGuard,
   ],
   exports: [
     AuthService,
     SessionsRepository,
-    JwtModule
+    JwtModule,
+    AccessTokenGuard,
   ]
 })
 export class AuthModule {}

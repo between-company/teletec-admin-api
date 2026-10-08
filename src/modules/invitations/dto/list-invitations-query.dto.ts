@@ -1,6 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger'
 import { Transform, Type } from 'class-transformer'
 import {
+  ArrayUnique,
+  IsArray,
   IsEnum,
   IsInt,
   IsOptional,
@@ -21,12 +23,35 @@ export enum InvitationListStatus {
 export class ListInvitationsQueryDto {
   @ApiPropertyOptional({
     enum: InvitationListStatus,
-    example: InvitationListStatus.PENDING,
-    description: 'Filter invitations by current status'
+    isArray: true,
+    example: [
+      InvitationListStatus.PENDING,
+      InvitationListStatus.REVOKED
+    ],
+    description: 'Filter by one or more statuses. Repeat the query param or separate values with commas. Omit it to return every status.'
   })
   @IsOptional()
-  @IsEnum(InvitationListStatus)
-  status?: InvitationListStatus
+  @Transform(({ value }) => {
+    if (value === undefined || value === null || value === '') {
+      return undefined
+    }
+
+    const rawValues = Array.isArray(value) ? value : [value]
+    const statuses = rawValues
+      .flatMap((item) => String(item).split(','))
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0)
+
+    if (statuses.length === 0) {
+      return undefined
+    }
+
+    return statuses
+  })
+  @IsArray()
+  @ArrayUnique()
+  @IsEnum(InvitationListStatus, { each: true })
+  status?: InvitationListStatus[]
 
   @ApiPropertyOptional({
     example: 'ana.lopez',
