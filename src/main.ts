@@ -1,10 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-import { ValidationPipe, VersioningType } from '@nestjs/common'
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser'
 import { AppModule } from './app.module.js';
 import { DEFAULT_API_VERSION } from './common/constants/api-version.constants.js';
+import { validationExceptionFactory } from './common/http/validation/validation-exception.factory.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -37,7 +38,8 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
-      transform: true
+      transform: true,
+      exceptionFactory: validationExceptionFactory
     })
   )
   app.use(cookieParser())
@@ -56,5 +58,9 @@ async function bootstrap() {
     }
   )
   await app.listen(port);
+  Logger.log(
+    `Application is running on port ${port}`,
+    'NestApplication'
+  )
 }
 await bootstrap();

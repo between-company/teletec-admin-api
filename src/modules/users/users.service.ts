@@ -13,6 +13,10 @@ import {
 } from '../../common/http/constants/error-codes.js'
 
 import {
+  errorMessage
+} from '../../common/http/messages/error-message.catalog.js'
+
+import {
   ApiException
 } from '../../common/http/exceptions/api.exception.js'
 
@@ -356,7 +360,7 @@ export class UsersService {
           throw new ApiException({
             statusCode: HttpStatus.CONFLICT,
             code: ERROR_CODES.USER_NOT_DELETED,
-            message: 'User is not deleted'
+            message: errorMessage(ERROR_CODES.USER_NOT_DELETED)
           })
         }
 
@@ -481,7 +485,7 @@ export class UsersService {
         code:
           ERROR_CODES.USER_NOT_FOUND,
         message:
-          'User not found'
+          errorMessage(ERROR_CODES.USER_NOT_FOUND)
       })
     }
 
@@ -496,7 +500,7 @@ export class UsersService {
         code:
           ERROR_CODES.USER_ALREADY_ACTIVATED,
         message:
-          'User has already been activated'
+          errorMessage(ERROR_CODES.USER_ALREADY_ACTIVATED)
       })
     }
 
@@ -566,7 +570,7 @@ export class UsersService {
         code:
           ERROR_CODES.USER_EMAIL_ALREADY_EXISTS,
         message:
-          'Email already registered'
+          errorMessage(ERROR_CODES.USER_EMAIL_ALREADY_EXISTS)
       })
     }
 
@@ -590,7 +594,7 @@ export class UsersService {
         code:
           ERROR_CODES.USER_PHONE_INCOMPLETE,
         message:
-          'Phone and country code must be provided together'
+          errorMessage(ERROR_CODES.USER_PHONE_INCOMPLETE)
       })
     }
 
@@ -612,7 +616,7 @@ export class UsersService {
           ERROR_CODES.USER_INVALID_AREAS,
 
         message:
-          'One or more areas are invalid or inactive'
+          errorMessage(ERROR_CODES.USER_INVALID_AREAS)
       })
     }
 
@@ -759,7 +763,7 @@ export class UsersService {
       throw new ApiException({
         statusCode: HttpStatus.BAD_REQUEST,
         code: ERROR_CODES.USER_PHONE_INCOMPLETE,
-        message: 'Phone and country code must be provided together'
+        message: errorMessage(ERROR_CODES.USER_PHONE_INCOMPLETE)
       })
     }
   }
@@ -777,7 +781,7 @@ export class UsersService {
       throw new ApiException({
         statusCode: HttpStatus.BAD_REQUEST,
         code: ERROR_CODES.USER_INVALID_AREAS,
-        message: 'One or more areas are invalid or inactive'
+        message: errorMessage(ERROR_CODES.USER_INVALID_AREAS)
       })
     }
 
@@ -815,7 +819,7 @@ export class UsersService {
     return new ApiException({
       statusCode: HttpStatus.NOT_FOUND,
       code: ERROR_CODES.USER_NOT_FOUND,
-      message: 'User not found'
+      message: errorMessage(ERROR_CODES.USER_NOT_FOUND)
     })
   }
 
