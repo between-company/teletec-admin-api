@@ -22,7 +22,7 @@ export class InvitationsRepository {
   ) {}
 
   async findAll(filters: {
-    status?: InvitationListStatus
+    status?: InvitationListStatus[]
     search?: string
     userId?: string
     page: number
@@ -231,33 +231,60 @@ export class InvitationsRepository {
 
   private applyStatusFilter(
     query: SelectQueryBuilder<Invitation>,
-    status?: InvitationListStatus
+    statuses?: InvitationListStatus[]
   ): void {
+    if (!statuses || statuses.length === 0) {
+      return
+    }
+
     const now = new Date()
 
-    if (status === InvitationListStatus.ACCEPTED) {
-      query.andWhere('invitation.usedAt IS NOT NULL')
-      return
-    }
+    query.andWhere(
+      new Brackets((statusQuery) => {
+        statuses.forEach((status, index) => {
+          const apply = index === 0
+            ? statusQuery.where.bind(statusQuery)
+            : statusQuery.orWhere.bind(statusQuery)
 
-    if (status === InvitationListStatus.REVOKED) {
-      query.andWhere('invitation.usedAt IS NULL')
-      query.andWhere('invitation.revokedAt IS NOT NULL')
-      return
-    }
+          if (status === InvitationListStatus.ACCEPTED) {
+            apply('invitation.usedAt IS NOT NULL')
+            return
+          }
 
-    if (status === InvitationListStatus.EXPIRED) {
-      query.andWhere('invitation.usedAt IS NULL')
-      query.andWhere('invitation.revokedAt IS NULL')
-      query.andWhere('invitation.expiresAt <= :now', { now })
-      return
-    }
+          if (status === InvitationListStatus.REVOKED) {
+            apply(
+              new Brackets((revokedQuery) => {
+                revokedQuery
+                  .where('invitation.usedAt IS NULL')
+                  .andWhere('invitation.revokedAt IS NOT NULL')
+              })
+            )
+            return
+          }
 
-    if (status === InvitationListStatus.PENDING) {
-      query.andWhere('invitation.usedAt IS NULL')
-      query.andWhere('invitation.revokedAt IS NULL')
-      query.andWhere('invitation.expiresAt > :now', { now })
-    }
+          if (status === InvitationListStatus.EXPIRED) {
+            apply(
+              new Brackets((expiredQuery) => {
+                expiredQuery
+                  .where('invitation.usedAt IS NULL')
+                  .andWhere('invitation.revokedAt IS NULL')
+                  .andWhere('invitation.expiresAt <= :now', { now })
+              })
+            )
+            return
+          }
+
+          apply(
+            new Brackets((pendingQuery) => {
+              pendingQuery
+                .where('invitation.usedAt IS NULL')
+                .andWhere('invitation.revokedAt IS NULL')
+                .andWhere('invitation.expiresAt > :now', { now })
+            })
+          )
+        })
+      })
+    )
   }
 
   private getRepository(
