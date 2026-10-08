@@ -25,6 +25,10 @@ import {
 } from '../../common/http/constants/error-codes.js'
 
 import {
+  errorMessage
+} from '../../common/http/messages/error-message.catalog.js'
+
+import {
   ApiErrorResponse
 } from '../../common/swagger/decorators/api-error-response.decorator.js'
 
@@ -106,7 +110,7 @@ export class InvitationsController {
   @ApiErrorResponse({
     status: HttpStatus.NOT_FOUND,
     code: ERROR_CODES.INVITATION_NOT_FOUND,
-    message: 'Invitation not found'
+    message: errorMessage(ERROR_CODES.INVITATION_NOT_FOUND)
   })
   findById(
     @Param('id', ParseUUIDPipe) id: string
@@ -132,7 +136,7 @@ export class InvitationsController {
     code:
       ERROR_CODES.USER_INVALID_AREAS,
     message:
-      'One or more areas are invalid or inactive'
+      errorMessage(ERROR_CODES.USER_INVALID_AREAS)
   })
   @ApiErrorResponse({
     status:
@@ -141,7 +145,7 @@ export class InvitationsController {
       ERROR_CODES
         .USER_EMAIL_ALREADY_EXISTS,
     message:
-      'Email already registered'
+      errorMessage(ERROR_CODES.USER_EMAIL_ALREADY_EXISTS)
   })
   async create(
     @Body()
@@ -173,7 +177,7 @@ export class InvitationsController {
       ERROR_CODES
         .INVITATION_INVALID_TOKEN,
     message:
-      'Invalid invitation token'
+      errorMessage(ERROR_CODES.INVITATION_INVALID_TOKEN)
   })
   @ApiErrorResponse({
     status:
@@ -182,7 +186,7 @@ export class InvitationsController {
       ERROR_CODES
         .INVITATION_ALREADY_USED,
     message:
-      'Invitation has already been used'
+      errorMessage(ERROR_CODES.INVITATION_ALREADY_USED)
   })
   @ApiErrorResponse({
     status:
@@ -191,7 +195,7 @@ export class InvitationsController {
       ERROR_CODES
         .INVITATION_EXPIRED,
     message:
-      'Invitation has expired'
+      errorMessage(ERROR_CODES.INVITATION_EXPIRED)
   })
   async accept(
     @Body()
@@ -220,30 +224,30 @@ export class InvitationsController {
   @ApiErrorResponse({
     status: HttpStatus.NOT_FOUND,
     code: ERROR_CODES.INVITATION_NOT_FOUND,
-    message: 'Invitation not found',
+    message: errorMessage(ERROR_CODES.INVITATION_NOT_FOUND),
     examples: [
       {
         code: ERROR_CODES.INVITATION_NOT_FOUND,
-        message: 'Invitation not found'
+        message: errorMessage(ERROR_CODES.INVITATION_NOT_FOUND)
       },
       {
         code: ERROR_CODES.USER_NOT_FOUND,
-        message: 'User not found'
+        message: errorMessage(ERROR_CODES.USER_NOT_FOUND)
       }
     ]
   })
   @ApiErrorResponse({
     status: HttpStatus.CONFLICT,
     code: ERROR_CODES.INVITATION_ALREADY_USED,
-    message: 'Invitation has already been used',
+    message: errorMessage(ERROR_CODES.INVITATION_ALREADY_USED),
     examples: [
       {
         code: ERROR_CODES.INVITATION_ALREADY_USED,
-        message: 'Invitation has already been used'
+        message: errorMessage(ERROR_CODES.INVITATION_ALREADY_USED)
       },
       {
         code: ERROR_CODES.USER_ALREADY_ACTIVATED,
-        message: 'User has already been activated'
+        message: errorMessage(ERROR_CODES.USER_ALREADY_ACTIVATED)
       }
     ]
   })
@@ -275,17 +279,17 @@ export class InvitationsController {
   @ApiErrorResponse({
     status: HttpStatus.NOT_FOUND,
     code: ERROR_CODES.INVITATION_NOT_FOUND,
-    message: 'Invitation not found'
+    message: errorMessage(ERROR_CODES.INVITATION_NOT_FOUND)
   })
   @ApiErrorResponse({
     status: HttpStatus.CONFLICT,
     code: ERROR_CODES.INVITATION_ALREADY_USED,
-    message: 'Invitation has already been used'
+    message: errorMessage(ERROR_CODES.INVITATION_ALREADY_USED)
   })
   @ApiErrorResponse({
     status: HttpStatus.CONFLICT,
     code: ERROR_CODES.INVITATION_REVOKED,
-    message: 'Invitation has already been revoked'
+    message: errorMessage(ERROR_CODES.INVITATION_REVOKED)
   })
   async revoke(
     @Param('id', ParseUUIDPipe) id: string

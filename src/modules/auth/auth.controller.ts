@@ -19,6 +19,7 @@
   
   import { API_VERSION } from '../../common/constants/api-version.constants.js'
   import { ERROR_CODES } from '../../common/http/constants/error-codes.js'
+  import { errorMessage } from '../../common/http/messages/error-message.catalog.js'
   import { ApiErrorResponse } from '../../common/swagger/decorators/api-error-response.decorator.js'
   import { ApiSuccessResponse } from '../../common/swagger/decorators/api-success-response.decorator.js'
   
@@ -55,7 +56,7 @@
     @ApiErrorResponse({
       status: HttpStatus.UNAUTHORIZED,
       code: ERROR_CODES.AUTH_INVALID_CREDENTIALS,
-      message: 'Invalid email or password'
+      message: errorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS)
     })
 
     async login(
@@ -93,12 +94,12 @@
     @ApiErrorResponse({
       status: HttpStatus.UNAUTHORIZED,
       code: ERROR_CODES.AUTH_REFRESH_TOKEN_MISSING,
-      message: 'Refresh token is missing'
+      message: errorMessage(ERROR_CODES.AUTH_REFRESH_TOKEN_MISSING)
     })
     @ApiErrorResponse({
       status: HttpStatus.UNAUTHORIZED,
       code: ERROR_CODES.AUTH_INVALID_SESSION,
-      message: 'Invalid or expired session'
+      message: errorMessage(ERROR_CODES.AUTH_INVALID_SESSION)
     })
     async refresh(
       @Req() request: Request,
@@ -114,7 +115,7 @@
         throw new ApiException({
           statusCode: HttpStatus.UNAUTHORIZED,
           code: ERROR_CODES.AUTH_REFRESH_TOKEN_MISSING,
-          message: 'Refresh token is missing'
+          message: errorMessage(ERROR_CODES.AUTH_REFRESH_TOKEN_MISSING)
         })
       }
 
@@ -148,12 +149,12 @@
     @ApiErrorResponse({
       status: HttpStatus.UNAUTHORIZED,
       code: ERROR_CODES.AUTH_REFRESH_TOKEN_MISSING,
-      message: 'Refresh token is missing'
+      message: errorMessage(ERROR_CODES.AUTH_REFRESH_TOKEN_MISSING)
     })
     @ApiErrorResponse({
       status: HttpStatus.UNAUTHORIZED,
       code: ERROR_CODES.AUTH_INVALID_SESSION,
-      message: 'Invalid or expired session'
+      message: errorMessage(ERROR_CODES.AUTH_INVALID_SESSION)
     })
     async logout(
       @Req() request: Request,
@@ -171,7 +172,7 @@
         throw new ApiException({
           statusCode: HttpStatus.UNAUTHORIZED,
           code: ERROR_CODES.AUTH_REFRESH_TOKEN_MISSING,
-          message: 'Refresh token is missing'
+          message: errorMessage(ERROR_CODES.AUTH_REFRESH_TOKEN_MISSING)
         })
       }
 

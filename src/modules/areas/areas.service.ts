@@ -10,6 +10,7 @@ import {
   
   import { ERROR_CODES } from '../../common/http/constants/error-codes.js'
   import { ApiException } from '../../common/http/exceptions/api.exception.js'
+  import { errorMessage } from '../../common/http/messages/error-message.catalog.js'
   
   import { CreateAreaDto } from './dto/create-area.dto.js'
   import { AreaResponseDto } from './dto/area-response.dto.js'
@@ -65,7 +66,7 @@ import {
         throw new ApiException({
           statusCode: HttpStatus.NOT_FOUND,
           code: ERROR_CODES.AREA_NOT_FOUND,
-          message: 'Area not found'
+          message: errorMessage(ERROR_CODES.AREA_NOT_FOUND)
         })
       }
     
@@ -84,7 +85,7 @@ import {
         throw new ApiException({
           statusCode: HttpStatus.CONFLICT,
           code: ERROR_CODES.AREA_NAME_ALREADY_EXISTS,
-          message: 'Area already exists'
+          message: errorMessage(ERROR_CODES.AREA_NAME_ALREADY_EXISTS)
         })
       }
   
@@ -137,7 +138,7 @@ import {
         throw new ApiException({
           statusCode: HttpStatus.NOT_FOUND,
           code: ERROR_CODES.AREA_NOT_FOUND,
-          message: 'Area not found'
+          message: errorMessage(ERROR_CODES.AREA_NOT_FOUND)
         })
       }
     
@@ -152,7 +153,7 @@ import {
           throw new ApiException({
             statusCode: HttpStatus.CONFLICT,
             code: ERROR_CODES.AREA_NAME_ALREADY_EXISTS,
-            message: 'Area already exists'
+            message: errorMessage(ERROR_CODES.AREA_NAME_ALREADY_EXISTS)
           })
         }
       }

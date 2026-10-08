@@ -13,6 +13,7 @@ import {
   
   import { ERROR_CODES } from '../../common/http/constants/error-codes.js'
   import { ApiException } from '../../common/http/exceptions/api.exception.js'
+  import { errorMessage } from '../../common/http/messages/error-message.catalog.js'
   import { RequestContextService } from '../../common/context/request-context.service.js'
   
   import { AuditService } from '../audit/audit.service.js'
@@ -363,7 +364,7 @@ import { RefreshResult } from './interfaces/refresh-result.interface.js'
       return new ApiException({
         statusCode: HttpStatus.UNAUTHORIZED,
         code: ERROR_CODES.AUTH_INVALID_CREDENTIALS,
-        message: 'Invalid email or password'
+        message: errorMessage(ERROR_CODES.AUTH_INVALID_CREDENTIALS)
       })
     }
 
@@ -371,7 +372,7 @@ import { RefreshResult } from './interfaces/refresh-result.interface.js'
       return new ApiException({
         statusCode: HttpStatus.UNAUTHORIZED,
         code: ERROR_CODES.AUTH_INVALID_SESSION,
-        message: 'Invalid or expired session'
+        message: errorMessage(ERROR_CODES.AUTH_INVALID_SESSION)
       })
     }
   }

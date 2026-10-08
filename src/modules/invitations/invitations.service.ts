@@ -25,6 +25,10 @@ import {
 } from '../../common/http/constants/error-codes.js'
 
 import {
+  errorMessage
+} from '../../common/http/messages/error-message.catalog.js'
+
+import {
   ApiException
 } from '../../common/http/exceptions/api.exception.js'
 
@@ -155,7 +159,7 @@ export class InvitationsService {
       throw new ApiException({
         statusCode: HttpStatus.NOT_FOUND,
         code: ERROR_CODES.INVITATION_NOT_FOUND,
-        message: 'Invitation not found'
+        message: errorMessage(ERROR_CODES.INVITATION_NOT_FOUND)
       })
     }
 
@@ -297,7 +301,7 @@ export class InvitationsService {
       throw new ApiException({
         statusCode: HttpStatus.BAD_REQUEST,
         code: ERROR_CODES.PASSWORD_CONFIRMATION_MISMATCH,
-        message: 'Password confirmation does not match'
+        message: errorMessage(ERROR_CODES.PASSWORD_CONFIRMATION_MISMATCH)
       })
     }
   
@@ -388,7 +392,7 @@ export class InvitationsService {
           throw new ApiException({
             statusCode: HttpStatus.NOT_FOUND,
             code: ERROR_CODES.INVITATION_NOT_FOUND,
-            message: 'Invitation not found'
+            message: errorMessage(ERROR_CODES.INVITATION_NOT_FOUND)
           })
         }
   
@@ -396,7 +400,7 @@ export class InvitationsService {
           throw new ApiException({
             statusCode: HttpStatus.CONFLICT,
             code: ERROR_CODES.INVITATION_ALREADY_USED,
-            message: 'Invitation has already been used'
+            message: errorMessage(ERROR_CODES.INVITATION_ALREADY_USED)
           })
         }
   
@@ -410,7 +414,7 @@ export class InvitationsService {
           throw new ApiException({
             statusCode: HttpStatus.NOT_FOUND,
             code: ERROR_CODES.USER_NOT_FOUND,
-            message: 'User not found'
+            message: errorMessage(ERROR_CODES.USER_NOT_FOUND)
           })
         }
   
@@ -421,7 +425,7 @@ export class InvitationsService {
           throw new ApiException({
             statusCode: HttpStatus.CONFLICT,
             code: ERROR_CODES.USER_ALREADY_ACTIVATED,
-            message: 'User has already been activated'
+            message: errorMessage(ERROR_CODES.USER_ALREADY_ACTIVATED)
           })
         }
   
@@ -572,7 +576,7 @@ export class InvitationsService {
           throw new ApiException({
             statusCode: HttpStatus.NOT_FOUND,
             code: ERROR_CODES.INVITATION_NOT_FOUND,
-            message: 'Invitation not found'
+            message: errorMessage(ERROR_CODES.INVITATION_NOT_FOUND)
           })
         }
   
@@ -580,7 +584,7 @@ export class InvitationsService {
           throw new ApiException({
             statusCode: HttpStatus.CONFLICT,
             code: ERROR_CODES.INVITATION_ALREADY_USED,
-            message: 'Invitation has already been used'
+            message: errorMessage(ERROR_CODES.INVITATION_ALREADY_USED)
           })
         }
   
@@ -588,7 +592,7 @@ export class InvitationsService {
           throw new ApiException({
             statusCode: HttpStatus.CONFLICT,
             code: ERROR_CODES.INVITATION_REVOKED,
-            message: 'Invitation has already been revoked'
+            message: errorMessage(ERROR_CODES.INVITATION_REVOKED)
           })
         }
   
@@ -651,7 +655,7 @@ export class InvitationsService {
       throw new ApiException({
         statusCode: HttpStatus.BAD_REQUEST,
         code: ERROR_CODES.INVITATION_INVALID_TOKEN,
-        message: 'Invalid invitation token'
+        message: errorMessage(ERROR_CODES.INVITATION_INVALID_TOKEN)
       })
     }
   
@@ -659,7 +663,7 @@ export class InvitationsService {
       throw new ApiException({
         statusCode: HttpStatus.CONFLICT,
         code: ERROR_CODES.INVITATION_ALREADY_USED,
-        message: 'Invitation has already been used'
+        message: errorMessage(ERROR_CODES.INVITATION_ALREADY_USED)
       })
     }
   
@@ -667,7 +671,7 @@ export class InvitationsService {
       throw new ApiException({
         statusCode: HttpStatus.GONE,
         code: ERROR_CODES.INVITATION_REVOKED,
-        message: 'Invitation has been revoked'
+        message: errorMessage(ERROR_CODES.INVITATION_REVOKED)
       })
     }
   
@@ -675,7 +679,7 @@ export class InvitationsService {
       throw new ApiException({
         statusCode: HttpStatus.GONE,
         code: ERROR_CODES.INVITATION_EXPIRED,
-        message: 'Invitation has expired'
+        message: errorMessage(ERROR_CODES.INVITATION_EXPIRED)
       })
     }
   }

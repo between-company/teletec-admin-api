@@ -7,8 +7,12 @@ import {
     Length,
     Matches,
     MaxLength,
-    MinLength
+    MinLength,
+    Validate
   } from 'class-validator'
+
+  import { PasswordLowercaseConstraint } from '../../../common/http/validation/password.constraints.js'
+  import { PasswordUppercaseConstraint } from '../../../common/http/validation/password.constraints.js'
   
   export class AcceptInvitationDto {
     @ApiProperty({
@@ -32,14 +36,8 @@ import {
     @IsString()
     @MinLength(8)
     @MaxLength(128)
-    @Matches(/[a-z]/, {
-      message:
-        'Password must contain at least one lowercase letter'
-    })
-    @Matches(/[A-Z]/, {
-      message:
-        'Password must contain at least one uppercase letter'
-    })
+    @Validate(PasswordLowercaseConstraint)
+    @Validate(PasswordUppercaseConstraint)
     password!: string
   
     @ApiProperty({

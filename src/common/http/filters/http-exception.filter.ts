@@ -11,6 +11,11 @@ import {
     ERROR_CODES,
     type ErrorCode
   } from '../constants/error-codes.js'
+  import { DEFAULT_APP_LANGUAGE } from '../messages/app-language.js'
+  import {
+    errorMessage,
+    isBusinessErrorCode
+  } from '../messages/error-message.catalog.js'
   
   import type { ApiErrorResponse } from '../interfaces/api-response.interface.js'
   
@@ -65,7 +70,10 @@ import {
         return {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           code: ERROR_CODES.INTERNAL_SERVER_ERROR,
-          message: 'Internal server error'
+          message: errorMessage(
+            ERROR_CODES.INTERNAL_SERVER_ERROR,
+            DEFAULT_APP_LANGUAGE
+          )
         }
       }
   
@@ -94,12 +102,17 @@ import {
       }
   
       if (exceptionResponse.code) {
+        const fallback = typeof exceptionResponse.message === 'string'
+          ? exceptionResponse.message
+          : defaultError.message
+
         return {
           statusCode,
           code: exceptionResponse.code,
-          message:
-            exceptionResponse.message ??
-            defaultError.message,
+          message: this.messageFor(
+            exceptionResponse.code,
+            fallback
+          ),
           details: exceptionResponse.details
         }
       }
@@ -115,49 +128,48 @@ import {
     ): Pick<NormalizedError, 'code' | 'message'> {
       switch (statusCode) {
         case HttpStatus.BAD_REQUEST:
-          return {
-            code: ERROR_CODES.BAD_REQUEST,
-            message: 'Bad request'
-          }
+          return this.defaultError(ERROR_CODES.BAD_REQUEST)
   
         case HttpStatus.UNAUTHORIZED:
-          return {
-            code: ERROR_CODES.UNAUTHORIZED,
-            message: 'Unauthorized'
-          }
+          return this.defaultError(ERROR_CODES.UNAUTHORIZED)
   
         case HttpStatus.FORBIDDEN:
-          return {
-            code: ERROR_CODES.FORBIDDEN,
-            message: 'Forbidden'
-          }
+          return this.defaultError(ERROR_CODES.FORBIDDEN)
   
         case HttpStatus.NOT_FOUND:
-          return {
-            code: ERROR_CODES.NOT_FOUND,
-            message: 'Resource not found'
-          }
+          return this.defaultError(ERROR_CODES.NOT_FOUND)
   
         case HttpStatus.CONFLICT:
-          return {
-            code: ERROR_CODES.CONFLICT,
-            message: 'Conflict'
-          }
+          return this.defaultError(ERROR_CODES.CONFLICT)
   
         case HttpStatus.TOO_MANY_REQUESTS:
-          return {
-            code: ERROR_CODES.TOO_MANY_REQUESTS,
-            message: 'Too many requests'
-          }
+          return this.defaultError(ERROR_CODES.TOO_MANY_REQUESTS)
   
         default:
-          return {
-            code: ERROR_CODES.INTERNAL_SERVER_ERROR,
-            message: 'Internal server error'
-          }
+          return this.defaultError(ERROR_CODES.INTERNAL_SERVER_ERROR)
       }
     }
   
+    private messageFor(
+      code: ErrorCode,
+      fallback: string
+    ): string {
+      if (!isBusinessErrorCode(code)) {
+        return fallback
+      }
+
+      return errorMessage(code, DEFAULT_APP_LANGUAGE)
+    }
+
+    private defaultError(
+      code: ErrorCode
+    ): Pick<NormalizedError, 'code' | 'message'> {
+      return {
+        code,
+        message: this.messageFor(code, code)
+      }
+    }
+
     private logUnknownException(exception: unknown) {
       if (exception instanceof Error) {
         this.logger.error(

@@ -19,6 +19,7 @@ import {
 
 import { API_VERSION } from '../../common/constants/api-version.constants.js'
 import { ERROR_CODES } from '../../common/http/constants/error-codes.js'
+import { errorMessage } from '../../common/http/messages/error-message.catalog.js'
 import { ApiErrorResponse } from '../../common/swagger/decorators/api-error-response.decorator.js'
 import { ApiPaginatedResponse } from '../../common/swagger/decorators/api-paginated-response.decorator.js'
 import { ApiSuccessResponse } from '../../common/swagger/decorators/api-success-response.decorator.js'
@@ -72,7 +73,7 @@ export class UsersController {
   @ApiErrorResponse({
     status: HttpStatus.NOT_FOUND,
     code: ERROR_CODES.USER_NOT_FOUND,
-    message: 'User not found'
+    message: errorMessage(ERROR_CODES.USER_NOT_FOUND)
   })
   findById(
     @Param('id', ParseUUIDPipe) id: string
@@ -101,18 +102,18 @@ export class UsersController {
       },
       {
         code: ERROR_CODES.USER_PHONE_INCOMPLETE,
-        message: 'Phone and country code must be provided together'
+        message: errorMessage(ERROR_CODES.USER_PHONE_INCOMPLETE)
       },
       {
         code: ERROR_CODES.USER_INVALID_AREAS,
-        message: 'One or more areas are invalid or inactive'
+        message: errorMessage(ERROR_CODES.USER_INVALID_AREAS)
       }
     ]
   })
   @ApiErrorResponse({
     status: HttpStatus.NOT_FOUND,
     code: ERROR_CODES.USER_NOT_FOUND,
-    message: 'User not found'
+    message: errorMessage(ERROR_CODES.USER_NOT_FOUND)
   })
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -134,7 +135,7 @@ export class UsersController {
   @ApiErrorResponse({
     status: HttpStatus.NOT_FOUND,
     code: ERROR_CODES.USER_NOT_FOUND,
-    message: 'User not found'
+    message: errorMessage(ERROR_CODES.USER_NOT_FOUND)
   })
   remove(
     @Param('id', ParseUUIDPipe) id: string
@@ -155,12 +156,12 @@ export class UsersController {
   @ApiErrorResponse({
     status: HttpStatus.NOT_FOUND,
     code: ERROR_CODES.USER_NOT_FOUND,
-    message: 'User not found'
+    message: errorMessage(ERROR_CODES.USER_NOT_FOUND)
   })
   @ApiErrorResponse({
     status: HttpStatus.CONFLICT,
     code: ERROR_CODES.USER_NOT_DELETED,
-    message: 'User is not deleted'
+    message: errorMessage(ERROR_CODES.USER_NOT_DELETED)
   })
   restore(
     @Param('id', ParseUUIDPipe) id: string

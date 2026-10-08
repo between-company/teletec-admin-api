@@ -10,6 +10,7 @@ import {
   import { RequestContextService } from '../../../common/context/request-context.service.js'
   import { ERROR_CODES } from '../../../common/http/constants/error-codes.js'
   import { ApiException } from '../../../common/http/exceptions/api.exception.js'
+  import { errorMessage } from '../../../common/http/messages/error-message.catalog.js'
   
   import type { AccessTokenPayload } from '../interfaces/access-token-payload.interface.js'
   import type { AuthenticatedRequest } from '../interfaces/authenticated-request.interface.js'
@@ -36,7 +37,7 @@ import {
         throw new ApiException({
           statusCode: HttpStatus.UNAUTHORIZED,
           code: ERROR_CODES.AUTH_TOKEN_MISSING,
-          message: 'Access token is missing'
+          message: errorMessage(ERROR_CODES.AUTH_TOKEN_MISSING)
         })
       }
   
@@ -51,7 +52,7 @@ import {
         throw new ApiException({
           statusCode: HttpStatus.UNAUTHORIZED,
           code: ERROR_CODES.AUTH_INVALID_TOKEN,
-          message: 'Invalid or expired access token'
+          message: errorMessage(ERROR_CODES.AUTH_INVALID_TOKEN)
         })
       }
   
@@ -59,7 +60,7 @@ import {
         throw new ApiException({
           statusCode: HttpStatus.UNAUTHORIZED,
           code: ERROR_CODES.AUTH_INVALID_TOKEN,
-          message: 'Invalid or expired access token'
+          message: errorMessage(ERROR_CODES.AUTH_INVALID_TOKEN)
         })
       }
   
@@ -72,7 +73,7 @@ import {
         throw new ApiException({
           statusCode: HttpStatus.UNAUTHORIZED,
           code: ERROR_CODES.AUTH_INVALID_SESSION,
-          message: 'Invalid or expired session'
+          message: errorMessage(ERROR_CODES.AUTH_INVALID_SESSION)
         })
       }
   
@@ -80,7 +81,7 @@ import {
         throw new ApiException({
           statusCode: HttpStatus.UNAUTHORIZED,
           code: ERROR_CODES.AUTH_INVALID_SESSION,
-          message: 'Invalid or expired session'
+          message: errorMessage(ERROR_CODES.AUTH_INVALID_SESSION)
         })
       }
   

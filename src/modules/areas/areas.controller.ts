@@ -20,6 +20,7 @@ import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
 import { ApiSuccessResponse } from '../../common/swagger/decorators/api-success-response.decorator.js'
 import { ApiErrorResponse } from '../../common/swagger/decorators/api-error-response.decorator.js'
 import { ERROR_CODES } from '../../common/http/constants/error-codes.js'
+import { errorMessage } from '../../common/http/messages/error-message.catalog.js'
 import { ApiPaginatedResponse } from '../../common/swagger/decorators/api-paginated-response.decorator.js'
   
   @ApiTags('Areas')
@@ -62,7 +63,7 @@ import { ApiPaginatedResponse } from '../../common/swagger/decorators/api-pagina
     @ApiErrorResponse({
       status: HttpStatus.NOT_FOUND,
       code: ERROR_CODES.AREA_NOT_FOUND,
-      message: 'Area not found'
+      message: errorMessage(ERROR_CODES.AREA_NOT_FOUND)
     })
     findById(
       @Param('id', new ParseUUIDPipe())
@@ -89,7 +90,7 @@ import { ApiPaginatedResponse } from '../../common/swagger/decorators/api-pagina
     @ApiErrorResponse({
       status: HttpStatus.CONFLICT,
       code: ERROR_CODES.AREA_NAME_ALREADY_EXISTS,
-      message: 'Area already exists'
+      message: errorMessage(ERROR_CODES.AREA_NAME_ALREADY_EXISTS)
     })
     create(
       @Body() dto: CreateAreaDto
@@ -110,12 +111,12 @@ import { ApiPaginatedResponse } from '../../common/swagger/decorators/api-pagina
     @ApiErrorResponse({
       status: HttpStatus.NOT_FOUND,
       code: ERROR_CODES.AREA_NOT_FOUND,
-      message: 'Area not found'
+      message: errorMessage(ERROR_CODES.AREA_NOT_FOUND)
     })
     @ApiErrorResponse({
       status: HttpStatus.CONFLICT,
       code: ERROR_CODES.AREA_NAME_ALREADY_EXISTS,
-      message: 'Area already exists'
+      message: errorMessage(ERROR_CODES.AREA_NAME_ALREADY_EXISTS)
     })
     update(
       @Param('id') id: string,
