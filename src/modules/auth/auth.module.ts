@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { Module, forwardRef } from '@nestjs/common'
 import {
   ConfigModule,
   ConfigService
@@ -33,7 +33,7 @@ import { AccessTokenGuard } from './guards/access-token.guard.js'
         )
       })
     }),
-    UsersModule,
+    forwardRef(() => UsersModule),
     AuditModule
   ],
   controllers: [

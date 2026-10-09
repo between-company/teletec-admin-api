@@ -7,7 +7,9 @@ import {
     ParseUUIDPipe,
     Patch,
     Post,
-    Query
+    Query,
+    Req,
+    UseGuards
   } from '@nestjs/common'
   
 import { AreasService } from './areas.service.js'
@@ -16,12 +18,14 @@ import { API_VERSION } from '../../common/constants/api-version.constants.js'
 import { UpdateAreaDto } from './dto/update-area.dto.js'
 import { ListAreasQueryDto } from './dto/list-areas-query.dto.js'
 import { AreaResponseDto } from './dto/area-response.dto.js'
-import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
 import { ApiSuccessResponse } from '../../common/swagger/decorators/api-success-response.decorator.js'
 import { ApiErrorResponse } from '../../common/swagger/decorators/api-error-response.decorator.js'
 import { ERROR_CODES } from '../../common/http/constants/error-codes.js'
 import { errorMessage } from '../../common/http/messages/error-message.catalog.js'
 import { ApiPaginatedResponse } from '../../common/swagger/decorators/api-paginated-response.decorator.js'
+import { AccessTokenGuard } from '../auth/guards/access-token.guard.js'
+import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface.js'
   
   @ApiTags('Areas')
   @Controller({
@@ -34,6 +38,8 @@ import { ApiPaginatedResponse } from '../../common/swagger/decorators/api-pagina
     ) {}
 
     @Get()
+    @UseGuards(AccessTokenGuard)
+    @ApiBearerAuth()
     @ApiOperation({
       summary: 'List areas'
     })
@@ -50,6 +56,8 @@ import { ApiPaginatedResponse } from '../../common/swagger/decorators/api-pagina
     }
 
     @Get(':id')
+    @UseGuards(AccessTokenGuard)
+    @ApiBearerAuth()
     @ApiOperation({
       summary: 'Get area by ID'
     })
@@ -73,6 +81,8 @@ import { ApiPaginatedResponse } from '../../common/swagger/decorators/api-pagina
     }
   
     @Post()
+    @UseGuards(AccessTokenGuard)
+    @ApiBearerAuth()
     @ApiOperation({
       summary: 'Create an area'
     })
@@ -93,12 +103,18 @@ import { ApiPaginatedResponse } from '../../common/swagger/decorators/api-pagina
       message: errorMessage(ERROR_CODES.AREA_NAME_ALREADY_EXISTS)
     })
     create(
-      @Body() dto: CreateAreaDto
+      @Body() dto: CreateAreaDto,
+      @Req() request: AuthenticatedRequest
     ) {
-      return this.areasService.create(dto)
+      return this.areasService.create(
+        dto,
+        request.auth.userId
+      )
     }
 
     @Patch(':id')
+    @UseGuards(AccessTokenGuard)
+    @ApiBearerAuth()
     @ApiOperation({
       summary: 'Update an area'
     })
@@ -120,8 +136,13 @@ import { ApiPaginatedResponse } from '../../common/swagger/decorators/api-pagina
     })
     update(
       @Param('id') id: string,
-      @Body() dto: UpdateAreaDto
+      @Body() dto: UpdateAreaDto,
+      @Req() request: AuthenticatedRequest
     ) {
-      return this.areasService.update(id, dto)
+      return this.areasService.update(
+        id,
+        dto,
+        request.auth.userId
+      )
     }
   }
