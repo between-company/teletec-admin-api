@@ -74,7 +74,8 @@ import {
     }
 
     async create(
-      dto: CreateAreaDto
+      dto: CreateAreaDto,
+      actorUserId: string | null = null
     ): Promise<AreaResponseDto> {
       const name = dto.name.trim()
   
@@ -111,10 +112,11 @@ import {
               entityType: AuditEntityType.AREA,
               entityId: savedArea.id,
   
+              ...(actorUserId ? { actorUserId } : {}),
               targetSnapshot: {
                 name: savedArea.name
               },
-  
+
               after: {
                 name: savedArea.name,
                 isActive: savedArea.isActive
@@ -130,7 +132,8 @@ import {
 
     async update(
       id: string,
-      dto: UpdateAreaDto
+      dto: UpdateAreaDto,
+      actorUserId: string | null = null
     ): Promise<AreaResponseDto> {
       const area = await this.areasRepository.findById(id)
     
@@ -205,10 +208,11 @@ import {
               entityType: AuditEntityType.AREA,
               entityId: savedArea.id,
     
+              ...(actorUserId ? { actorUserId } : {}),
               targetSnapshot: {
                 name: savedArea.name
               },
-    
+
               before,
               after: {
                 name: savedArea.name,
