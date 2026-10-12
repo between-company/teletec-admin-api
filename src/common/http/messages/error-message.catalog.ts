@@ -40,6 +40,11 @@ const catalogs: Record<
     USER_NOT_FOUND: 'Usuario no encontrado',
     USER_NOT_DELETED: 'El usuario no está eliminado',
     USER_ALREADY_ACTIVATED: 'El usuario ya fue activado',
+    USER_INACTIVE: 'La cuenta está inactiva',
+
+    ROLE_NOT_FOUND: 'Uno o más roles no existen',
+    PERMISSION_NOT_FOUND: 'Uno o más permisos no existen',
+    ACCESS_FORBIDDEN: 'No tienes permiso para esta acción',
 
     INVITATION_INVALID_TOKEN: 'El token de invitación no es válido',
     INVITATION_ALREADY_USED: 'La invitación ya fue utilizada',

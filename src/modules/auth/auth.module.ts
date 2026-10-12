@@ -7,6 +7,7 @@ import { JwtModule } from '@nestjs/jwt'
 import { TypeOrmModule } from '@nestjs/typeorm'
 
 import { AuditModule } from '../audit/audit.module.js'
+import { AccessModule } from '../access/access.module.js'
 import { UsersModule } from '../users/users.module.js'
 
 import { AuthController } from './auth.controller.js'
@@ -34,6 +35,7 @@ import { AccessTokenGuard } from './guards/access-token.guard.js'
       })
     }),
     forwardRef(() => UsersModule),
+    forwardRef(() => AccessModule),
     AuditModule
   ],
   controllers: [

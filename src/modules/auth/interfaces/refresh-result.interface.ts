@@ -7,5 +7,7 @@ export interface RefreshResult {
       email: string
       firstName: string
       lastName: string
+      roles: string[]
+      permissions: string[]
     }
   }

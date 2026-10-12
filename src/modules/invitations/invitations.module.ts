@@ -9,6 +9,7 @@ import { AuditModule } from '../audit/audit.module.js'
 import { EmailModule } from '../email/email.module.js'
 import { InvitationsController } from './invitations.controller.js'
 import { AuthModule } from '../auth/auth.module.js'
+import { AccessModule } from '../access/access.module.js'
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthModule } from '../auth/auth.module.js'
     AuditModule,
     EmailModule,
     AuthModule,
+    AccessModule,
   ],
   controllers: [
     InvitationsController

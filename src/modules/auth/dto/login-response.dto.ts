@@ -20,6 +20,18 @@ export class AuthenticatedUserDto {
     example: 'Pérez'
   })
   lastName!: string
+
+  @ApiProperty({
+    type: [String],
+    example: ['admin']
+  })
+  roles!: string[]
+
+  @ApiProperty({
+    type: [String],
+    example: ['users.invite', 'areas.manage']
+  })
+  permissions!: string[]
 }
 
 export class LoginResponseDto {
