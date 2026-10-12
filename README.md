@@ -250,6 +250,7 @@ El login devuelve el access token en el cuerpo y guarda `refresh_token` en una c
 | `GET` | `/api/v1/access/users/:userId` |
 | `PUT` | `/api/v1/access/users/:userId/roles` |
 | `PUT` | `/api/v1/access/users/:userId/permissions` |
+| `GET` | `/api/v1/access/areas/:areaId/permissions` |
 | `PUT` | `/api/v1/access/areas/:areaId/permissions` |
 
 Login, refresh, logout, health y aceptar la invitación no piden permiso. Lo demás pide token y una clave.

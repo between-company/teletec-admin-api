@@ -9,6 +9,7 @@ import { AuditAction } from '../audit/enums/audit-action.enum.js'
 import { AuditEntityType } from '../audit/enums/audit-entity-type.enum.js'
 import { AccessRepository } from './access.repository.js'
 import { expandImpliedKeys } from './constants/access.constants.js'
+import type { Area } from '../areas/entities/area.entity.js'
 import type { Permission } from './entities/permission.entity.js'
 import type { Role } from './entities/role.entity.js'
 import type { GrantRow } from './interfaces/grant-row.interface.js'
@@ -165,21 +166,19 @@ export class AccessService {
     return this.loadAccess(userId)
   }
 
+  async getAreaAccess(areaId: string): Promise<AreaAccess> {
+    const area = await this.requireArea(areaId)
+
+    return this.loadAreaAccess(area)
+  }
+
   async replaceAreaPermissions(
     areaId: string,
     permissionKeys: string[]
   ): Promise<AreaAccess> {
     const permissions =
       await this.requirePermissions(permissionKeys)
-    const area = await this.accessRepository.findArea(areaId)
-
-    if (!area) {
-      throw new ApiException({
-        statusCode: HttpStatus.NOT_FOUND,
-        code: ERROR_CODES.AREA_NOT_FOUND,
-        message: errorMessage(ERROR_CODES.AREA_NOT_FOUND)
-      })
-    }
+    const area = await this.requireArea(areaId)
 
     await this.dataSource.transaction(async (manager) => {
       const { removed, added } =
@@ -224,11 +223,15 @@ export class AccessService {
       }
     })
 
+    return this.loadAreaAccess(area)
+  }
+
+  private async loadAreaAccess(area: Area): Promise<AreaAccess> {
     const rows =
-      await this.accessRepository.findAreaPermissions(areaId)
+      await this.accessRepository.findAreaPermissions(area.id)
 
     return {
-      areaId,
+      areaId: area.id,
       grants: rows
         .map((row) => ({
           key: row.permission.key,
@@ -430,6 +433,20 @@ export class AccessService {
     }
 
     return permissions
+  }
+
+  private async requireArea(areaId: string): Promise<Area> {
+    const area = await this.accessRepository.findArea(areaId)
+
+    if (!area) {
+      throw new ApiException({
+        statusCode: HttpStatus.NOT_FOUND,
+        code: ERROR_CODES.AREA_NOT_FOUND,
+        message: errorMessage(ERROR_CODES.AREA_NOT_FOUND)
+      })
+    }
+
+    return area
   }
 
   private userNotFound(): ApiException {

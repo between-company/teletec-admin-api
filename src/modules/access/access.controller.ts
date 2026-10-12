@@ -140,6 +140,26 @@ export class AccessController {
     )
   }
 
+  @Get('areas/:areaId/permissions')
+  @ApiOperation({
+    summary: 'List the permissions granted by an area'
+  })
+  @ApiParam({
+    name: 'areaId',
+    format: 'uuid'
+  })
+  @ApiSuccessResponse(AreaAccessResponseDto)
+  @ApiErrorResponse({
+    status: HttpStatus.NOT_FOUND,
+    code: ERROR_CODES.AREA_NOT_FOUND,
+    message: errorMessage(ERROR_CODES.AREA_NOT_FOUND)
+  })
+  getAreaAccess(
+    @Param('areaId', ParseUUIDPipe) areaId: string
+  ) {
+    return this.accessService.getAreaAccess(areaId)
+  }
+
   @Put('areas/:areaId/permissions')
   @ApiOperation({
     summary: 'Replace the permissions granted by an area'
