@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config';
@@ -8,16 +9,18 @@ import { DEFAULT_API_VERSION } from './common/constants/api-version.constants.js
 import { validationExceptionFactory } from './common/http/validation/validation-exception.factory.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService)
   const port = configService.getOrThrow<number>('PORT')
   const frontendUrl = configService
     .getOrThrow<string>('FRONTEND_URL')
     .replace(/\/$/, '')
 
+  app.set('trust proxy', 1)
   app.enableCors({
     origin: frontendUrl,
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS']
   })
   
   const swaggerConfig = new DocumentBuilder()

@@ -210,27 +210,27 @@
     private clearRefreshTokenCookie(
       response: Response
     ): void {
-      response.clearCookie(
+      response.cookie(
         AUTH_COOKIE.REFRESH_TOKEN,
-        this.refreshTokenCookieOptions()
+        '',
+        {
+          ...this.refreshTokenCookieOptions(),
+          maxAge: 0
+        }
       )
     }
 
     private refreshTokenCookieOptions(): {
       httpOnly: true
-      secure: boolean
-      sameSite: 'lax'
-      path: '/api/v1/auth'
+      secure: true
+      sameSite: 'none'
+      path: '/'
     } {
-      const isProduction =
-        this.configService.get<string>('NODE_ENV') ===
-        'production'
-
       return {
         httpOnly: true,
-        secure: isProduction,
-        sameSite: 'lax',
-        path: '/api/v1/auth'
+        secure: true,
+        sameSite: 'none',
+        path: '/'
       }
     }
   }
