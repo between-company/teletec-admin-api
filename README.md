@@ -205,7 +205,7 @@ Un éxito llega como `{ success, data }`. Un listado agrega `meta`. Un error lle
 
 El `code` no cambia de idioma. El `message` de un error de negocio sale en español. En una validación de DTO, `message` sigue siendo `Validation failed` y el texto en español va en `details.messages` y `details.fields`.
 
-El login devuelve el access token en el cuerpo y guarda `refresh_token` en una cookie `httpOnly`, `SameSite=Lax`, con path `/api/v1/auth`. `secure` solo se activa si `NODE_ENV` es `production`. Refresh y logout usan esa cookie.
+El login devuelve el access token en el cuerpo y guarda `refresh_token` en una cookie `HttpOnly`, `Secure`, `SameSite=None` y `Path=/`. No lleva `Domain`. Refresh vuelve a emitir esa cookie. Logout la borra con los mismos atributos y `Max-Age=0`. El front tiene que llamar login, refresh y logout con `credentials: 'include'`.
 
 ## Endpoints
 
