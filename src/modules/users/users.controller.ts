@@ -8,9 +8,12 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
-  Query
+  Query,
+  Req,
+  UseGuards
 } from '@nestjs/common'
 import {
+  ApiBearerAuth,
   ApiExtraModels,
   ApiOperation,
   ApiParam,
@@ -32,6 +35,8 @@ import {
   UserResponseDto
 } from './dto/user-response.dto.js'
 import { UsersService } from './users.service.js'
+import { AccessTokenGuard } from '../auth/guards/access-token.guard.js'
+import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface.js'
 
 @ApiTags('Users')
 @ApiExtraModels(UserAreaResponseDto)
@@ -45,6 +50,8 @@ export class UsersController {
   ) {}
 
   @Get()
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'List users'
   })
@@ -61,6 +68,8 @@ export class UsersController {
   }
 
   @Get(':id')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get user by ID'
   })
@@ -82,6 +91,8 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Update a user'
   })
@@ -117,12 +128,19 @@ export class UsersController {
   })
   update(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateUserDto
+    @Body() dto: UpdateUserDto,
+    @Req() request: AuthenticatedRequest
   ) {
-    return this.usersService.update(id, dto)
+    return this.usersService.update(
+      id,
+      dto,
+      request.auth.userId
+    )
   }
 
   @Delete(':id')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Soft delete a user'
   })
@@ -138,12 +156,18 @@ export class UsersController {
     message: errorMessage(ERROR_CODES.USER_NOT_FOUND)
   })
   remove(
-    @Param('id', ParseUUIDPipe) id: string
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: AuthenticatedRequest
   ) {
-    return this.usersService.remove(id)
+    return this.usersService.remove(
+      id,
+      request.auth.userId
+    )
   }
 
   @Post(':id/restore')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Restore a soft-deleted user'
   })
@@ -164,8 +188,12 @@ export class UsersController {
     message: errorMessage(ERROR_CODES.USER_NOT_DELETED)
   })
   restore(
-    @Param('id', ParseUUIDPipe) id: string
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: AuthenticatedRequest
   ) {
-    return this.usersService.restore(id)
+    return this.usersService.restore(
+      id,
+      request.auth.userId
+    )
   }
 }

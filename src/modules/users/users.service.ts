@@ -136,7 +136,8 @@ export class UsersService {
 
   async update(
     id: string,
-    dto: UpdateUserDto
+    dto: UpdateUserDto,
+    actorUserId: string | null = null
   ): Promise<UserResponseDto> {
     const current = await this.usersRepository.findByIdWithAreas(id)
 
@@ -270,6 +271,7 @@ export class UsersService {
               : AuditAction.USER_UPDATED,
             entityType: AuditEntityType.USER,
             entityId: savedUser.id,
+            ...(actorUserId ? { actorUserId } : {}),
             targetSnapshot: {
               name: `${savedUser.firstName} ${savedUser.lastName}`,
               email: savedUser.email
@@ -296,7 +298,8 @@ export class UsersService {
   }
 
   async remove(
-    id: string
+    id: string,
+    actorUserId: string | null = null
   ): Promise<DeleteUserResponseDto> {
     return this.dataSource.transaction(
       async (manager) => {
@@ -319,6 +322,7 @@ export class UsersService {
             action: AuditAction.USER_DELETED,
             entityType: AuditEntityType.USER,
             entityId: removed.id,
+            ...(actorUserId ? { actorUserId } : {}),
             targetSnapshot: {
               name: `${removed.firstName} ${removed.lastName}`,
               email: removed.email
@@ -342,7 +346,8 @@ export class UsersService {
   }
 
   async restore(
-    id: string
+    id: string,
+    actorUserId: string | null = null
   ): Promise<UserResponseDto> {
     return this.dataSource.transaction(
       async (manager) => {
@@ -386,6 +391,7 @@ export class UsersService {
             action: AuditAction.USER_RESTORED,
             entityType: AuditEntityType.USER,
             entityId: recovered.id,
+            ...(actorUserId ? { actorUserId } : {}),
             targetSnapshot: {
               name: `${recovered.firstName} ${recovered.lastName}`,
               email: recovered.email
@@ -423,12 +429,14 @@ export class UsersService {
 
   async createPending(
     dto: CreateUserDto,
-    manager?: EntityManager
+    manager?: EntityManager,
+    actorUserId: string | null = null
   ): Promise<UserResponseDto> {
     if (manager) {
       return this.createPendingWithManager(
         dto,
-        manager
+        manager,
+        actorUserId
       )
     }
 
@@ -436,7 +444,8 @@ export class UsersService {
       async transactionManager => {
         return this.createPendingWithManager(
           dto,
-          transactionManager
+          transactionManager,
+          actorUserId
         )
       }
     )
@@ -530,6 +539,8 @@ export class UsersService {
           AuditEntityType.USER,
         entityId:
           user.id,
+        actorUserId:
+          user.id,
         targetSnapshot: {
           name:
             `${user.firstName} ${user.lastName}`,
@@ -549,7 +560,8 @@ export class UsersService {
 
   private async createPendingWithManager(
     dto: CreateUserDto,
-    manager: EntityManager
+    manager: EntityManager,
+    actorUserId: string | null = null
   ): Promise<UserResponseDto> {
     const email =
       dto.email
@@ -670,6 +682,7 @@ export class UsersService {
           AuditEntityType.USER,
         entityId:
           savedUser.id,
+        ...(actorUserId ? { actorUserId } : {}),
         targetSnapshot: {
           name:
             `${savedUser.firstName} ${savedUser.lastName}`,

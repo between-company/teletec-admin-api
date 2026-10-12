@@ -21,7 +21,7 @@ export class RequestContextService {
 
   setActor(
     actorUserId: string,
-    actorSessionId: string
+    actorSessionId: string | null
   ): void {
     const context = this.storage.getStore()
 

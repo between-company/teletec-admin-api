@@ -29,6 +29,10 @@ import {
 } from '../../common/http/messages/error-message.catalog.js'
 
 import {
+  RequestContextService
+} from '../../common/context/request-context.service.js'
+
+import {
   ApiException
 } from '../../common/http/exceptions/api.exception.js'
 
@@ -120,7 +124,10 @@ export class InvitationsService {
       DataSource,
 
     private readonly configService:
-      ConfigService
+      ConfigService,
+
+    private readonly requestContextService:
+      RequestContextService
   ) {}
 
   async findAll(
@@ -195,7 +202,8 @@ export class InvitationsService {
                   areaIds:
                     dto.areaIds
                 },
-                manager
+                manager,
+                createdById
               )
 
           const {
@@ -217,6 +225,8 @@ export class InvitationsService {
 
               entityId:
                 invitation.id,
+
+              ...(createdById ? { actorUserId: createdById } : {}),
 
               targetSnapshot: {
                 id:
@@ -313,6 +323,11 @@ export class InvitationsService {
       )
   
     this.validateInvitation(initialInvitation)
+
+    this.requestContextService.setActor(
+      initialInvitation.userId,
+      null
+    )
   
     const passwordHash = await argon2.hash(
       dto.password,
@@ -352,6 +367,7 @@ export class InvitationsService {
             action: AuditAction.INVITATION_ACCEPTED,
             entityType: AuditEntityType.INVITATION,
             entityId: invitation.id,
+            actorUserId: invitation.userId,
             targetSnapshot: {
               id: invitation.id,
               userId: invitation.userId
@@ -455,6 +471,7 @@ export class InvitationsService {
             action: AuditAction.INVITATION_RESENT,
             entityType: AuditEntityType.INVITATION,
             entityId: newInvitation.id,
+            ...(createdById ? { actorUserId: createdById } : {}),
             targetSnapshot: {
               id: newInvitation.id,
               userId: invitation.userId,
@@ -562,7 +579,8 @@ export class InvitationsService {
   }
 
   async revokeInvitation(
-    invitationId: string
+    invitationId: string,
+    actorUserId: string | null = null
   ): Promise<RevokeInvitationResponseDto> {
     return this.dataSource.transaction(
       async manager => {
@@ -610,6 +628,7 @@ export class InvitationsService {
             action: AuditAction.INVITATION_REVOKED,
             entityType: AuditEntityType.INVITATION,
             entityId: invitation.id,
+            ...(actorUserId ? { actorUserId } : {}),
             targetSnapshot: {
               id: invitation.id,
               userId: invitation.userId

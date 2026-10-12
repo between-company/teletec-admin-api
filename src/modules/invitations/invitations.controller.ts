@@ -7,10 +7,13 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
-  Query
+  Query,
+  Req,
+  UseGuards
 } from '@nestjs/common'
 
 import {
+  ApiBearerAuth,
   ApiOperation,
   ApiParam,
   ApiTags
@@ -69,6 +72,8 @@ import {
 } from './invitations.service.js'
 import { ResendInvitationResponseDto } from './dto/resend-invitation-response.dto.js'
 import { RevokeInvitationResponseDto } from './dto/revoke-invitation-response.dto.js'
+import { AccessTokenGuard } from '../auth/guards/access-token.guard.js'
+import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface.js'
 
 @ApiTags('Invitations')
 @Controller({
@@ -82,6 +87,8 @@ export class InvitationsController {
   ) {}
 
   @Get()
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'List invitations'
   })
@@ -92,12 +99,14 @@ export class InvitationsController {
     message: 'Validation failed'
   })
   findAll(
-    @Query() query: ListInvitationsQueryDto
+    @Query() query: ListInvitationsQueryDto,
   ) {
     return this.invitationsService.findAll(query)
   }
 
   @Get(':id')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get invitation by ID'
   })
@@ -119,6 +128,8 @@ export class InvitationsController {
   }
 
   @Post()
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary:
       'Invite a new user'
@@ -148,13 +159,13 @@ export class InvitationsController {
       errorMessage(ERROR_CODES.USER_EMAIL_ALREADY_EXISTS)
   })
   async create(
-    @Body()
-    dto: CreateInvitationDto
+    @Body() dto: CreateInvitationDto,
+    @Req() request: AuthenticatedRequest
   ): Promise<InvitationResponseDto> {
     return this.invitationsService
       .inviteUser(
         dto,
-        null
+        request.auth.userId,
       )
   }
 
@@ -207,6 +218,8 @@ export class InvitationsController {
 
   @Post(':id/resend')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Issue a new invitation for the same pending user'
   })
@@ -252,16 +265,19 @@ export class InvitationsController {
     ]
   })
   async resend(
-    @Param('id', ParseUUIDPipe) id: string
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: AuthenticatedRequest
   ): Promise<ResendInvitationResponseDto> {
     return this.invitationsService.resendInvitation(
       id,
-      null
+      request.auth.userId,
     )
   }
 
-  @Post(':id/revoke')
+  @Post(':id/revoke') 
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Revoke a pending invitation'
   })
@@ -292,8 +308,12 @@ export class InvitationsController {
     message: errorMessage(ERROR_CODES.INVITATION_REVOKED)
   })
   async revoke(
-    @Param('id', ParseUUIDPipe) id: string
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: AuthenticatedRequest
   ): Promise<RevokeInvitationResponseDto> {
-    return this.invitationsService.revokeInvitation(id)
+    return this.invitationsService.revokeInvitation(
+      id,
+      request.auth.userId
+    )
   }
 }

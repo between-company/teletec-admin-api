@@ -8,6 +8,7 @@ import { UsersModule } from '../users/users.module.js'
 import { AuditModule } from '../audit/audit.module.js'
 import { EmailModule } from '../email/email.module.js'
 import { InvitationsController } from './invitations.controller.js'
+import { AuthModule } from '../auth/auth.module.js'
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { InvitationsController } from './invitations.controller.js'
     UsersModule,
     AuditModule,
     EmailModule,
+    AuthModule,
   ],
   controllers: [
     InvitationsController

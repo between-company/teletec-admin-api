@@ -1,6 +1,8 @@
 import {
     HttpStatus,
-    Injectable
+    Inject,
+    Injectable,
+    forwardRef
   } from '@nestjs/common'
   import { ConfigService } from '@nestjs/config'
   import { JwtService } from '@nestjs/jwt'
@@ -30,6 +32,7 @@ import { RefreshResult } from './interfaces/refresh-result.interface.js'
   @Injectable()
   export class AuthService {
     constructor(
+      @Inject(forwardRef(() => UsersService))
       private readonly usersService: UsersService,
       private readonly sessionsRepository: SessionsRepository,
       private readonly jwtService: JwtService,
@@ -108,6 +111,8 @@ import { RefreshResult } from './interfaces/refresh-result.interface.js'
               action: AuditAction.SESSION_CREATED,
               entityType: AuditEntityType.SESSION,
               entityId: savedSession.id,
+              actorUserId: user.id,
+              actorSessionId: savedSession.id,
               targetSnapshot: {
                 id: savedSession.id,
                 userId: user.id,
@@ -203,6 +208,8 @@ import { RefreshResult } from './interfaces/refresh-result.interface.js'
               action: AuditAction.SESSION_REFRESHED,
               entityType: AuditEntityType.SESSION,
               entityId: session.id,
+              actorUserId: session.userId,
+              actorSessionId: session.id,
               targetSnapshot: {
                 id: session.id,
                 userId: session.userId
@@ -301,6 +308,8 @@ import { RefreshResult } from './interfaces/refresh-result.interface.js'
               action: AuditAction.SESSION_REVOKED,
               entityType: AuditEntityType.SESSION,
               entityId: session.id,
+              actorUserId: session.userId,
+              actorSessionId: session.id,
               targetSnapshot: {
                 id: session.id,
                 userId: session.userId
