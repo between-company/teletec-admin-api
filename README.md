@@ -106,7 +106,7 @@ El seeder no corre al arrancar ni dentro de una migración. Con `SEED_ADMIN_PASS
 pnpm seed:admin
 ```
 
-Inserta un usuario activo, ya activado, con nombre Administrador TELETEC. El correo sale de `SEED_ADMIN_EMAIL` o, si no está, de `admin@teletec.local`. Si ese correo ya existe, no lo vuelve a crear y no borra otros usuarios.
+Inserta un usuario activo, ya activado, con nombre Administrador TELETEC. El correo sale de `SEED_ADMIN_EMAIL` o, si no está, de `admin@teletec.local`. Si ese correo ya existe, no lo vuelve a crear y no borra otros usuarios. En los dos casos le asigna el rol `superadmin`, así que hay que correr las migraciones antes.
 
 ## Estructura
 
@@ -118,10 +118,11 @@ src/
   common/entities/base.entity.ts  id UUID, createdAt, updatedAt
   common/http/                    sobre { success, data }, filtro de errores, códigos, mensajes
   database/typeorm/               conexión Nest y DataSource del CLI
-  database/migrations/            esquema: users, sessions, areas, audit, invitations
-  database/seeds/                 usuario administrador de `pnpm seed:admin`
+  database/migrations/            esquema: users, sessions, areas, audit, invitations, acceso
+  database/seeds/                 usuario superadmin de `pnpm seed:admin`
   modules/health/                 GET /api/v1/health
   modules/auth/                   login, refresh y logout
+  modules/access/                 roles, permisos y su asignación
   modules/users/                  listado, detalle, edición, borrado lógico y restauración
   modules/areas/                  catálogo de áreas
   modules/invitations/            alta de usuarios por invitación
@@ -197,7 +198,21 @@ Versiones instaladas según `pnpm-lock.yaml`.
 
 `invitations` guarda el hash del token, vencimiento, uso y revocación. `audit_logs` guarda la acción, el actor y el antes y el después de cada cambio de estado.
 
-Las migraciones aplicadas son `InitAuth`, `CreateAuditLogs`, `CreateAreas`, `UpdateUsersAndUserAreas` y `CreateInvitations`.
+`roles` y `permissions` son catálogos con `key` única. `role_permissions` dice qué claves trae cada rol y `role_inclusions` qué roles incluye otro rol. `user_roles`, `area_permissions` y `user_permissions` guardan lo que asigna un admin.
+
+Las migraciones aplicadas son `InitAuth`, `CreateAuditLogs`, `CreateAreas`, `UpdateUsersAndUserAreas`, `CreateInvitations`, `CreateAccess` y `SeedAccessCatalog`.
+
+## Roles y permisos
+
+Lo que una persona puede hacer es la unión de tres listas: las claves de sus roles (incluidos los roles que esos roles incluyen), las de sus áreas activas y las asignadas directo a ella. No se guarda el resultado. Se calcula en cada petición, así que un cambio aplica en la siguiente llamada sin volver a entrar. El access token solo lleva usuario y sesión.
+
+Una clave `recurso.manage` también concede `recurso.read`. En `users`, cualquier clave de escritura concede `users.read`.
+
+`SeedAccessCatalog` deja dos roles. `admin` trae `users.invite`, `users.update`, `users.delete`, `users.pause`, `areas.manage` y `permissions.assign`. `superadmin` incluye a `admin` y es para desarrollo. `users.read` y `areas.read` existen sueltas para dárselas a un área o a una persona que solo consulte.
+
+Una sección nueva agrega, en su propia migración, sus filas en `permissions`, en `roles` si trae un rol, en `role_permissions` y, si otro rol debe heredarlo, en `role_inclusions`. Sus rutas usan `AccessTokenGuard`, `PermissionsGuard` y `@RequirePermissions('clave')`, y la clave va en `PERMISSIONS` de `access.constants.ts`.
+
+Sin token, o con una sesión que no sirve, la respuesta es 401. Con un usuario inactivo, 401 con `USER_INACTIVE`. Sin la clave, 403 con `ACCESS_FORBIDDEN`.
 
 ## HTTP
 
@@ -230,6 +245,27 @@ El login devuelve el access token en el cuerpo y guarda `refresh_token` en una c
 | `POST` | `/api/v1/invitations/accept` |
 | `POST` | `/api/v1/invitations/:id/resend` |
 | `POST` | `/api/v1/invitations/:id/revoke` |
+| `GET` | `/api/v1/access/roles` |
+| `GET` | `/api/v1/access/permissions` |
+| `GET` | `/api/v1/access/users/:userId` |
+| `PUT` | `/api/v1/access/users/:userId/roles` |
+| `PUT` | `/api/v1/access/users/:userId/permissions` |
+| `GET` | `/api/v1/access/areas/:areaId/permissions` |
+| `PUT` | `/api/v1/access/areas/:areaId/permissions` |
+
+Login, refresh, logout, health y aceptar la invitación no piden permiso. Lo demás pide token y una clave.
+
+| Ruta | Clave |
+| --- | --- |
+| `GET /areas`, `GET /areas/:id` | `areas.read` |
+| `POST /areas`, `PATCH /areas/:id` | `areas.manage` |
+| `GET /users`, `GET /users/:id` | `users.read` |
+| `PATCH /users/:id` | `users.update` para datos y áreas; `users.pause` para `isActive` |
+| `DELETE /users/:id`, `POST /users/:id/restore` | `users.delete` |
+| `/invitations` salvo `accept` | `users.invite` |
+| `/access/*` | `permissions.assign` |
+
+Los `PUT` de `/access` reemplazan la lista completa: `{ "roleKeys": [...] }` o `{ "permissionKeys": [...] }`. Una clave que no existe responde 400. `GET /access/users/:userId` devuelve los roles, cada clave con su origen (rol, área o directa) y la lista efectiva. Login y refresh devuelven `roles` y `permissions` dentro de `user` para armar el menú.
 
 No hay alta pública de usuarios. `POST /api/v1/invitations` crea al usuario pendiente y envía el correo. Aceptar la invitación activa la cuenta y guarda la contraseña. `DELETE /api/v1/users/:id` es un borrado lógico.
 

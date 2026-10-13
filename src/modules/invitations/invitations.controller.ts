@@ -73,6 +73,9 @@ import {
 import { ResendInvitationResponseDto } from './dto/resend-invitation-response.dto.js'
 import { RevokeInvitationResponseDto } from './dto/revoke-invitation-response.dto.js'
 import { AccessTokenGuard } from '../auth/guards/access-token.guard.js'
+import { PERMISSIONS } from '../access/constants/access.constants.js'
+import { RequirePermissions } from '../access/decorators/require-permissions.decorator.js'
+import { PermissionsGuard } from '../access/guards/permissions.guard.js'
 import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface.js'
 
 @ApiTags('Invitations')
@@ -87,7 +90,8 @@ export class InvitationsController {
   ) {}
 
   @Get()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.USERS_INVITE)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'List invitations'
@@ -105,7 +109,8 @@ export class InvitationsController {
   }
 
   @Get(':id')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.USERS_INVITE)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get invitation by ID'
@@ -128,7 +133,8 @@ export class InvitationsController {
   }
 
   @Post()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.USERS_INVITE)
   @ApiBearerAuth()
   @ApiOperation({
     summary:
@@ -218,7 +224,8 @@ export class InvitationsController {
 
   @Post(':id/resend')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.USERS_INVITE)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Issue a new invitation for the same pending user'
@@ -276,7 +283,8 @@ export class InvitationsController {
 
   @Post(':id/revoke') 
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.USERS_INVITE)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Revoke a pending invitation'

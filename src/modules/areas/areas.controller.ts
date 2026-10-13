@@ -26,6 +26,9 @@ import { errorMessage } from '../../common/http/messages/error-message.catalog.j
 import { ApiPaginatedResponse } from '../../common/swagger/decorators/api-paginated-response.decorator.js'
 import { AccessTokenGuard } from '../auth/guards/access-token.guard.js'
 import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface.js'
+import { PERMISSIONS } from '../access/constants/access.constants.js'
+import { RequirePermissions } from '../access/decorators/require-permissions.decorator.js'
+import { PermissionsGuard } from '../access/guards/permissions.guard.js'
   
   @ApiTags('Areas')
   @Controller({
@@ -38,7 +41,8 @@ import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-requ
     ) {}
 
     @Get()
-    @UseGuards(AccessTokenGuard)
+    @UseGuards(AccessTokenGuard, PermissionsGuard)
+    @RequirePermissions(PERMISSIONS.AREAS_READ)
     @ApiBearerAuth()
     @ApiOperation({
       summary: 'List areas'
@@ -56,7 +60,8 @@ import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-requ
     }
 
     @Get(':id')
-    @UseGuards(AccessTokenGuard)
+    @UseGuards(AccessTokenGuard, PermissionsGuard)
+    @RequirePermissions(PERMISSIONS.AREAS_READ)
     @ApiBearerAuth()
     @ApiOperation({
       summary: 'Get area by ID'
@@ -81,7 +86,8 @@ import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-requ
     }
   
     @Post()
-    @UseGuards(AccessTokenGuard)
+    @UseGuards(AccessTokenGuard, PermissionsGuard)
+    @RequirePermissions(PERMISSIONS.AREAS_MANAGE)
     @ApiBearerAuth()
     @ApiOperation({
       summary: 'Create an area'
@@ -113,7 +119,8 @@ import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-requ
     }
 
     @Patch(':id')
-    @UseGuards(AccessTokenGuard)
+    @UseGuards(AccessTokenGuard, PermissionsGuard)
+    @RequirePermissions(PERMISSIONS.AREAS_MANAGE)
     @ApiBearerAuth()
     @ApiOperation({
       summary: 'Update an area'

@@ -12,6 +12,7 @@ import { HttpExceptionFilter } from './common/http/filters/http-exception.filter
 import { AuditModule } from './modules/audit/audit.module.js';
 import { RequestContextModule } from './common/context/request-context.module.js';
 import { AreasModule } from './modules/areas/areas.module.js';
+import { AccessModule } from './modules/access/access.module.js'
 import { InvitationsModule } from './modules/invitations/invitations.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 
@@ -32,6 +33,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
     AuditModule,
     AreasModule,
     InvitationsModule,
+    AccessModule,
     AuthModule,
   ],
   providers: [

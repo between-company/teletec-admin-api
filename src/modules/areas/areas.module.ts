@@ -7,12 +7,14 @@ import { AuditModule } from '../audit/audit.module.js'
 import { AreasService } from './areas.service.js'
 import { AreasController } from './areas.controller.js'
 import { AuthModule } from '../auth/auth.module.js'
+import { AccessModule } from '../access/access.module.js'
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Area]),
     AuditModule,
     forwardRef(() => AuthModule),
+    AccessModule,
   ],
   controllers: [
     AreasController,

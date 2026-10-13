@@ -2,6 +2,9 @@ import * as argon2 from 'argon2'
 
 import dataSource from '../typeorm/data-source.js'
 import { User } from '../../modules/users/entities/user.entity.js'
+import { ROLE_KEYS } from '../../modules/access/constants/access.constants.js'
+import { Role } from '../../modules/access/entities/role.entity.js'
+import { UserRole } from '../../modules/access/entities/user-role.entity.js'
 
 const email = (
   process.env.SEED_ADMIN_EMAIL ?? 'admin@teletec.local'
@@ -25,29 +28,50 @@ async function seedAdmin(): Promise<void> {
       withDeleted: true
     })
 
-    if (existing) {
+    let user = existing
+
+    if (user) {
       console.log(`Admin user already exists: ${email}`)
-      return
+    } else {
+      const passwordHash = await argon2.hash(password, {
+        type: argon2.argon2id
+      })
+
+      user = await users.save(
+        users.create({
+          email,
+          passwordHash,
+          firstName: 'Administrador',
+          lastName: 'TELETEC',
+          phoneCountryCode: null,
+          phone: null,
+          isActive: true,
+          activatedAt: new Date()
+        })
+      )
+
+      console.log(`Admin user created: ${user.email}`)
     }
 
-    const passwordHash = await argon2.hash(password, {
-      type: argon2.argon2id
+    const role = await dataSource.getRepository(Role).findOne({
+      where: { key: ROLE_KEYS.SUPERADMIN }
     })
 
-    const user = users.create({
-      email,
-      passwordHash,
-      firstName: 'Administrador',
-      lastName: 'TELETEC',
-      phoneCountryCode: null,
-      phone: null,
-      isActive: true,
-      activatedAt: new Date()
-    })
+    if (!role) {
+      throw new Error(
+        `Role ${ROLE_KEYS.SUPERADMIN} is missing. Run the migrations first`
+      )
+    }
 
-    const saved = await users.save(user)
+    await dataSource
+      .getRepository(UserRole)
+      .createQueryBuilder()
+      .insert()
+      .values({ userId: user.id, roleId: role.id })
+      .orIgnore()
+      .execute()
 
-    console.log(`Admin user created: ${saved.email}`)
+    console.log(`Role ${role.key} assigned to ${user.email}`)
   } finally {
     await dataSource.destroy()
   }

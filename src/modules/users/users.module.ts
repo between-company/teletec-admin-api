@@ -10,6 +10,7 @@ import { AuditModule } from '../audit/audit.module.js'
 import { UsersService } from './users.service.js'
 import { UsersController } from './users.controller.js'
 import { AuthModule } from '../auth/auth.module.js'
+import { AccessModule } from '../access/access.module.js'
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthModule } from '../auth/auth.module.js'
     AreasModule,
     AuditModule,
     forwardRef(() => AuthModule),
+    forwardRef(() => AccessModule),
   ],
   controllers: [
     UsersController
