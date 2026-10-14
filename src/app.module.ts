@@ -1,3 +1,5 @@
+import { ClientsModule } from './modules/clients/clients.module.js'
+import { ContactsModule } from './modules/contacts/contacts.module.js'
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { validateEnv } from './config/env.schema.js';
@@ -32,6 +34,8 @@ import { AuthModule } from './modules/auth/auth.module.js';
     SessionsModule,
     AuditModule,
     AreasModule,
+    ClientsModule,
+    ContactsModule,
     InvitationsModule,
     AccessModule,
     AuthModule,

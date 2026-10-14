@@ -348,6 +348,10 @@ export const PERMISSION_CATALOG: PermissionSeed[] = [
     name: 'Administrar catálogos',
     module: 'catalogs',
   },
+  { key: P.CLIENTS_UPDATE, name: 'Editar clientes', module: 'clients' },
+  { key: P.CLIENTS_DELETE, name: 'Borrar clientes', module: 'clients' },
+  { key: P.CLIENT_CONTACTS_UPDATE, name: 'Editar contactos de clientes', module: 'client-contacts' },
+  { key: P.CLIENT_CONTACTS_DELETE, name: 'Borrar contactos de clientes', module: 'client-contacts' },
 ]
 
 const vendedor: PermissionKey[] = [
@@ -448,6 +452,10 @@ const tesoreria: PermissionKey[] = [
 ]
 
 const administrador: PermissionKey[] = [
+  P.CLIENTS_UPDATE,
+  P.CLIENTS_DELETE,
+  P.CLIENT_CONTACTS_UPDATE,
+  P.CLIENT_CONTACTS_DELETE,
   P.USERS_READ,
   P.USERS_INVITE,
   P.USERS_UPDATE,
