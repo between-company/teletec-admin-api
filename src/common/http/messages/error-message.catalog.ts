@@ -31,6 +31,8 @@ const catalogs: Record<
 
     AREA_NAME_ALREADY_EXISTS: 'El área ya existe',
     AREA_NOT_FOUND: 'Área no encontrada',
+    CLIENT_NOT_FOUND: 'Cliente no encontrado',
+    CONTACT_NOT_FOUND: 'Contacto no encontrado',
 
     USER_EMAIL_ALREADY_EXISTS: 'El correo ya está registrado',
     USER_INVALID_AREAS:

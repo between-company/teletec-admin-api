@@ -1,11 +1,11 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
 import {
   ArrayNotEmpty,
   ArrayUnique,
   IsArray,
   IsEmail,
-  IsOptional,
+  IsNotEmpty,
   IsString,
   IsUUID,
   MaxLength,
@@ -51,31 +51,31 @@ export class CreateInvitationDto {
   @MaxLength(100)
   lastName!: string
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: '+52'
   })
-  @IsOptional()
   @Transform(({ value }) =>
     typeof value === 'string'
       ? value.trim()
       : value
   )
   @IsString()
+  @IsNotEmpty()
   @MaxLength(8)
-  phoneCountryCode?: string
+  phoneCountryCode!: string
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: '4271234567'
   })
-  @IsOptional()
   @Transform(({ value }) =>
     typeof value === 'string'
       ? value.trim()
       : value
   )
   @IsString()
+  @IsNotEmpty()
   @MaxLength(30)
-  phone?: string
+  phone!: string
 
   @ApiProperty({
     type: [String],
