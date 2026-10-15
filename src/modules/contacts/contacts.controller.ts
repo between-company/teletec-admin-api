@@ -49,7 +49,8 @@ import { DeleteContactResponseDto } from './dto/delete-contact-response.dto.js'
   code: ERROR_CODES.CLIENT_NOT_FOUND,
   message: errorMessage(ERROR_CODES.CLIENT_NOT_FOUND)
 })
-@Controller({ path: 'client-contacts', version: API_VERSION.V1 })
+@ApiParam({ name: 'clientId', type: String, format: 'uuid' })
+@Controller({ path: 'clients/:clientId/contacts', version: API_VERSION.V1 })
 export class ContactsController {
   constructor(private readonly service: ContactsService) {}
 
@@ -57,8 +58,11 @@ export class ContactsController {
   @RequirePermissions(PERMISSIONS.CLIENT_CONTACTS_READ)
   @ApiOperation({ summary: 'List contacts' })
   @ApiPaginatedResponse(ContactResponseDto)
-  findAll(@Query() query: ListContactsQueryDto) {
-    return this.service.findAll(query)
+  findAll(
+    @Param('clientId', new ParseUUIDPipe()) clientId: string,
+    @Query() query: ListContactsQueryDto
+  ) {
+    return this.service.findAll(clientId, query)
   }
 
   @Get(':id')
@@ -66,16 +70,23 @@ export class ContactsController {
   @ApiOperation({ summary: 'Get contact by ID' })
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   @ApiSuccessResponse(ContactResponseDto)
-  findById(@Param('id', new ParseUUIDPipe()) id: string) {
-    return this.service.findById(id)
+  findById(
+    @Param('clientId', new ParseUUIDPipe()) clientId: string,
+    @Param('id', new ParseUUIDPipe()) id: string
+  ) {
+    return this.service.findById(clientId, id)
   }
 
   @Post()
   @RequirePermissions(PERMISSIONS.CLIENT_CONTACTS_CREATE)
   @ApiOperation({ summary: 'Create a contact' })
   @ApiSuccessResponse(ContactResponseDto, { status: HttpStatus.CREATED })
-  create(@Body() dto: CreateContactDto, @Req() request: AuthenticatedRequest) {
-    return this.service.create(dto, request.auth.userId)
+  create(
+    @Param('clientId', new ParseUUIDPipe()) clientId: string,
+    @Body() dto: CreateContactDto,
+    @Req() request: AuthenticatedRequest
+  ) {
+    return this.service.create(clientId, dto, request.auth.userId)
   }
 
   @Patch(':id')
@@ -84,11 +95,12 @@ export class ContactsController {
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   @ApiSuccessResponse(ContactResponseDto)
   update(
+    @Param('clientId', new ParseUUIDPipe()) clientId: string,
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateContactDto,
     @Req() request: AuthenticatedRequest
   ) {
-    return this.service.update(id, dto, request.auth.userId)
+    return this.service.update(clientId, id, dto, request.auth.userId)
   }
 
   @Delete(':id')
@@ -97,9 +109,10 @@ export class ContactsController {
   @ApiParam({ name: 'id', type: String, format: 'uuid' })
   @ApiSuccessResponse(DeleteContactResponseDto)
   remove(
+    @Param('clientId', new ParseUUIDPipe()) clientId: string,
     @Param('id', new ParseUUIDPipe()) id: string,
     @Req() request: AuthenticatedRequest
   ) {
-    return this.service.remove(id, request.auth.userId)
+    return this.service.remove(clientId, id, request.auth.userId)
   }
 }

@@ -28,9 +28,9 @@ export class ContactsService {
     private readonly clientsRepository: ClientsRepository
   ) {}
 
-  async findAll(filters: ListContactsQueryDto) {
-    if (filters.clientId) await this.assertClient(filters.clientId)
-    const { items, totalItems } = await this.repository.findAll(filters)
+  async findAll(clientId: string, filters: ListContactsQueryDto) {
+    await this.assertClient(clientId)
+    const { items, totalItems } = await this.repository.findAll(clientId, filters)
     return paginated(
       items.map((entity) => this.toResponseDto(entity)),
       createPaginationMeta({
@@ -41,23 +41,24 @@ export class ContactsService {
     )
   }
 
-  async findById(id: string): Promise<ContactResponseDto> {
-    const entity = await this.repository.findById(id)
+  async findById(clientId: string, id: string): Promise<ContactResponseDto> {
+    await this.assertClient(clientId)
+    const entity = await this.repository.findById(clientId, id)
     if (!entity) throw this.notFoundException()
-    await this.assertClient(entity.clientId)
     return this.toResponseDto(entity)
   }
 
   async create(
+    clientId: string,
     dto: CreateContactDto,
     actorUserId: string | null = null
   ): Promise<ContactResponseDto> {
     return this.dataSource.transaction(async (manager) => {
-      await this.assertClient(dto.clientId, manager)
+      await this.assertClient(clientId, manager)
 
       const entity = this.repository.create(
         {
-          clientId: dto.clientId,
+          clientId,
           name: dto.name,
           type: dto.type,
           isActive: dto.isActive ?? true,
@@ -88,22 +89,23 @@ export class ContactsService {
   }
 
   async update(
+    clientId: string,
     id: string,
     dto: UpdateContactDto,
     actorUserId: string | null = null
   ): Promise<ContactResponseDto> {
     return this.dataSource.transaction(async (manager) => {
-      const current = await this.repository.findById(id, manager)
-      if (!current) throw this.notFoundException()
-      await this.assertClient(current.clientId, manager)
-      const entity = await this.repository.findByIdForUpdate(id, manager)
+      await this.assertClient(clientId, manager)
+      const entity = await this.repository.findByIdForUpdate(clientId, id, manager)
       if (!entity) throw this.notFoundException()
       const before = this.snapshot(entity)
       if (dto.name !== undefined) entity.name = dto.name
       if (dto.email !== undefined) entity.email = dto.email
-      if (dto.phoneCountryCode !== undefined) entity.phoneCountryCode = dto.phoneCountryCode
+      if (dto.phoneCountryCode !== undefined)
+        entity.phoneCountryCode = dto.phoneCountryCode
       if (dto.phone !== undefined) entity.phone = dto.phone
-      if (dto.officePhoneCountryCode !== undefined) entity.officePhoneCountryCode = dto.officePhoneCountryCode
+      if (dto.officePhoneCountryCode !== undefined)
+        entity.officePhoneCountryCode = dto.officePhoneCountryCode
       if (dto.officePhone !== undefined) entity.officePhone = dto.officePhone
       if (dto.type !== undefined) entity.type = dto.type
       if (dto.isActive !== undefined) entity.isActive = dto.isActive
@@ -142,14 +144,13 @@ export class ContactsService {
   }
 
   async remove(
+    clientId: string,
     id: string,
     actorUserId: string | null = null
   ): Promise<DeleteContactResponseDto> {
     return this.dataSource.transaction(async (manager) => {
-      const current = await this.repository.findById(id, manager)
-      if (!current) throw this.notFoundException()
-      await this.assertClient(current.clientId, manager)
-      const entity = await this.repository.findByIdForUpdate(id, manager)
+      await this.assertClient(clientId, manager)
+      const entity = await this.repository.findByIdForUpdate(clientId, id, manager)
       if (!entity) throw this.notFoundException()
       const removed = await this.repository.softRemove(entity, manager)
       await this.auditService.create(
