@@ -10,14 +10,14 @@ export class ContactsRepository {
     @InjectRepository(Contact) private readonly repository: Repository<Contact>
   ) {}
 
-  async findAll(filters: ListContactsQueryDto) {
+  async findAll(clientId: string, filters: ListContactsQueryDto) {
     const [items, totalItems] = await this.repository.findAndCount({
       where: {
         ...(filters.isActive !== undefined
           ? { isActive: filters.isActive }
           : {}),
         ...(filters.search ? { name: ILike(`%${filters.search}%`) } : {}),
-        ...(filters.clientId ? { clientId: filters.clientId } : {}),
+        clientId,
         ...(filters.type ? { type: filters.type } : {})
       },
       order: { name: 'ASC', id: 'ASC' },
@@ -27,16 +27,21 @@ export class ContactsRepository {
     return { items, totalItems }
   }
 
-  findById(id: string, manager?: EntityManager): Promise<Contact | null> {
-    return this.getRepository(manager).findOne({ where: { id } })
+  findById(
+    clientId: string,
+    id: string,
+    manager?: EntityManager
+  ): Promise<Contact | null> {
+    return this.getRepository(manager).findOne({ where: { id, clientId } })
   }
 
   findByIdForUpdate(
+    clientId: string,
     id: string,
     manager: EntityManager
   ): Promise<Contact | null> {
     return this.getRepository(manager).findOne({
-      where: { id },
+      where: { id, clientId },
       lock: { mode: 'pessimistic_write' }
     })
   }

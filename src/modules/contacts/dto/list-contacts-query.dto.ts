@@ -4,7 +4,6 @@ import { Transform, Type } from 'class-transformer'
 import {
   IsBoolean,
   IsEnum,
-  IsUUID,
   IsInt,
   IsOptional,
   IsString,
@@ -14,11 +13,6 @@ import {
 } from 'class-validator'
 
 export class ListContactsQueryDto {
-  @ApiPropertyOptional({ format: 'uuid' })
-  @IsOptional()
-  @IsUUID('4')
-  clientId?: string
-
   @ApiPropertyOptional({ enum: ContactType })
   @IsOptional()
   @IsEnum(ContactType)

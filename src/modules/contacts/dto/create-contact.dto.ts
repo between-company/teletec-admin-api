@@ -8,16 +8,11 @@ import {
   MaxLength,
   ValidateIf,
   IsEmail,
-  IsEnum,
-  IsUUID
+  IsEnum
 } from 'class-validator'
 import { ContactType } from '../enums/contact-type.enum.js'
 
 export class CreateContactDto {
-  @ApiProperty({ format: 'uuid' })
-  @IsUUID('4')
-  clientId!: string
-
   @ApiProperty({ maxLength: 150 })
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
