@@ -34,6 +34,9 @@ const catalogs: Record<
     CLIENT_NOT_FOUND: 'Cliente no encontrado',
     CONTACT_NOT_FOUND: 'Contacto no encontrado',
 
+    SPECIALTY_NAME_ALREADY_EXISTS: 'La especialidad ya existe',
+    SPECIALTY_NOT_FOUND: 'Especialidad no encontrada',
+
     USER_EMAIL_ALREADY_EXISTS: 'El correo ya está registrado',
     USER_INVALID_AREAS:
       'Una o más áreas no son válidas o están inactivas',

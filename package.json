@@ -27,6 +27,7 @@
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "typeorm": "typeorm-ts-node-esm",
     "seed:admin": "node --loader ts-node/esm --no-warnings src/database/seeds/admin.seed.ts",
+    "seed:superadmin": "node --loader ts-node/esm --no-warnings src/database/seeds/superadmin.seed.ts"
     "seed:permissions": "node --loader ts-node/esm --no-warnings src/database/seeds/permissions.seed.ts",
     "seed:roles-areas": "node --loader ts-node/esm --no-warnings src/database/seeds/roles-areas.seed.ts"
   },
