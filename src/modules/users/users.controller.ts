@@ -37,6 +37,10 @@ import {
 import { UsersService } from './users.service.js'
 import { AccessTokenGuard } from '../auth/guards/access-token.guard.js'
 import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface.js'
+import { AccessService } from '../access/access.service.js'
+import { PERMISSIONS } from '../access/constants/access.constants.js'
+import { RequirePermissions } from '../access/decorators/require-permissions.decorator.js'
+import { PermissionsGuard } from '../access/guards/permissions.guard.js'
 
 @ApiTags('Users')
 @ApiExtraModels(UserAreaResponseDto)
@@ -46,11 +50,13 @@ import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-requ
 })
 export class UsersController {
   constructor(
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly accessService: AccessService
   ) {}
 
   @Get()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.USERS_READ)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'List users'
@@ -68,7 +74,8 @@ export class UsersController {
   }
 
   @Get(':id')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.USERS_READ)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get user by ID'
@@ -91,7 +98,7 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, PermissionsGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Update a user'
@@ -131,15 +138,12 @@ export class UsersController {
     @Body() dto: UpdateUserDto,
     @Req() request: AuthenticatedRequest
   ) {
-    return this.usersService.update(
-      id,
-      dto,
-      request.auth.userId
-    )
+    return this.updateUser(id, dto, request.auth.userId)
   }
 
   @Delete(':id')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.USERS_DELETE)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Soft delete a user'
@@ -166,7 +170,8 @@ export class UsersController {
   }
 
   @Post(':id/restore')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.USERS_DELETE)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Restore a soft-deleted user'
@@ -194,6 +199,39 @@ export class UsersController {
     return this.usersService.restore(
       id,
       request.auth.userId
+    )
+  }
+
+  private async updateUser(
+    id: string,
+    dto: UpdateUserDto,
+    actorUserId: string
+  ) {
+    const profileTouched =
+      dto.firstName !== undefined ||
+      dto.lastName !== undefined ||
+      dto.phoneCountryCode !== undefined ||
+      dto.phone !== undefined ||
+      dto.areaIds !== undefined
+    const keys: string[] = []
+
+    if (profileTouched || dto.isActive === undefined) {
+      keys.push(PERMISSIONS.USERS_UPDATE)
+    }
+
+    if (dto.isActive !== undefined) {
+      keys.push(PERMISSIONS.USERS_PAUSE)
+    }
+
+    await this.accessService.assertGranted(
+      actorUserId,
+      keys
+    )
+
+    return this.usersService.update(
+      id,
+      dto,
+      actorUserId
     )
   }
 }

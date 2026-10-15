@@ -1,4 +1,4 @@
-import { ApiPropertyOptional } from '@nestjs/swagger'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
 import {
   ArrayNotEmpty,
@@ -6,6 +6,7 @@ import {
   IsArray,
   IsBoolean,
   IsOptional,
+  IsNotEmpty,
   IsString,
   IsUUID,
   MaxLength,
@@ -41,31 +42,29 @@ export class UpdateUserDto {
   @MaxLength(100)
   lastName?: string
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: '+52',
-    maxLength: 8,
-    nullable: true
+    maxLength: 8
   })
-  @IsOptional()
   @Transform(({ value }) =>
     typeof value === 'string' ? value.trim() : value
   )
   @IsString()
+  @IsNotEmpty()
   @MaxLength(8)
-  phoneCountryCode?: string | null
+  phoneCountryCode!: string
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: '5512345678',
-    maxLength: 30,
-    nullable: true
+    maxLength: 30
   })
-  @IsOptional()
   @Transform(({ value }) =>
     typeof value === 'string' ? value.trim() : value
   )
   @IsString()
+  @IsNotEmpty()
   @MaxLength(30)
-  phone?: string | null
+  phone!: string
 
   @ApiPropertyOptional({
     type: [String],

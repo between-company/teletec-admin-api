@@ -1,11 +1,11 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
   import { Transform } from 'class-transformer'
   import {
     ArrayNotEmpty,
     ArrayUnique,
     IsArray,
     IsEmail,
-    IsOptional,
+    IsNotEmpty,
     IsString,
     IsUUID,
     MaxLength,
@@ -52,23 +52,29 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
     })
     lastName!: string
   
-    @IsOptional()
+    @Transform(({ value }) =>
+      typeof value === 'string' ? value.trim() : value
+    )
     @IsString()
+    @IsNotEmpty()
     @MaxLength(8)
-    @ApiPropertyOptional({
+    @ApiProperty({
       example: '+52',
       maxLength: 8
     })
-    phoneCountryCode?: string
+    phoneCountryCode!: string
   
-    @IsOptional()
+    @Transform(({ value }) =>
+      typeof value === 'string' ? value.trim() : value
+    )
     @IsString()
+    @IsNotEmpty()
     @MaxLength(30)
-    @ApiPropertyOptional({
+    @ApiProperty({
       example: '5512345678',
       maxLength: 30
     })
-    phone?: string
+    phone!: string
   
     @IsArray()
     @ArrayNotEmpty()

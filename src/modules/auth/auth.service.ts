@@ -22,6 +22,7 @@ import {
   import { AuditAction } from '../audit/enums/audit-action.enum.js'
   import { AuditEntityType } from '../audit/enums/audit-entity-type.enum.js'
   import { UsersService } from '../users/users.service.js'
+import { AccessService } from '../access/access.service.js'
   
   import type { AccessTokenPayload } from './interfaces/access-token-payload.interface.js'
   import type { LoginResult } from './interfaces/login-result.interface.js'
@@ -39,7 +40,8 @@ import { RefreshResult } from './interfaces/refresh-result.interface.js'
       private readonly configService: ConfigService,
       private readonly auditService: AuditService,
       private readonly requestContextService: RequestContextService,
-      private readonly dataSource: DataSource
+      private readonly dataSource: DataSource,
+      private readonly accessService: AccessService
     ) {}
   
     async login(
@@ -144,6 +146,9 @@ import { RefreshResult } from './interfaces/refresh-result.interface.js'
           expiresIn: accessTokenExpiresIn
         }
       )
+      const access = await this.accessService.getSessionAccess(
+        user.id
+      )
   
       return {
         accessToken,
@@ -153,7 +158,9 @@ import { RefreshResult } from './interfaces/refresh-result.interface.js'
           id: user.id,
           email: user.email,
           firstName: user.firstName,
-          lastName: user.lastName
+          lastName: user.lastName,
+          roles: access.roleKeys,
+          permissions: access.permissions
         }
       }
     }
@@ -184,6 +191,10 @@ import { RefreshResult } from './interfaces/refresh-result.interface.js'
           if (session.expiresAt.getTime() <= Date.now()) {
             throw this.invalidSessionException()
           }
+
+          const access = await this.accessService.getSessionAccess(
+            session.userId
+          )
     
           const newRefreshToken = this.generateRefreshToken()
           const newRefreshTokenHash = this.hashRefreshToken(
@@ -253,7 +264,9 @@ import { RefreshResult } from './interfaces/refresh-result.interface.js'
               id: user.id,
               email: user.email,
               firstName: user.firstName,
-              lastName: user.lastName
+              lastName: user.lastName,
+              roles: access.roleKeys,
+              permissions: access.permissions
             }
           }
         }

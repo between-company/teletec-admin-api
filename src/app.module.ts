@@ -1,3 +1,5 @@
+import { ClientsModule } from './modules/clients/clients.module.js'
+import { ContactsModule } from './modules/contacts/contacts.module.js'
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { validateEnv } from './config/env.schema.js';
@@ -13,6 +15,7 @@ import { AuditModule } from './modules/audit/audit.module.js';
 import { RequestContextModule } from './common/context/request-context.module.js';
 import { AreasModule } from './modules/areas/areas.module.js';
 import { SpecialtiesModule } from './modules/specialties/specialties.module.js';
+import { AccessModule } from './modules/access/access.module.js'
 import { InvitationsModule } from './modules/invitations/invitations.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 
@@ -33,7 +36,10 @@ import { AuthModule } from './modules/auth/auth.module.js';
     AuditModule,
     AreasModule,
     SpecialtiesModule,
+    ClientsModule,
+    ContactsModule,
     InvitationsModule,
+    AccessModule,
     AuthModule,
   ],
   providers: [
