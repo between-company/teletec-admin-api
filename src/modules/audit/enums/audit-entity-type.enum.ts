@@ -5,5 +5,6 @@ export enum AuditEntityType {
     SESSION = 'SESSION',
     ROLE = 'ROLE',
     PERMISSION = 'PERMISSION',
-    PROJECT = 'PROJECT'
+    PROJECT = 'PROJECT',
+    SPECIALTY = 'SPECIALTY'
   }

@@ -32,6 +32,9 @@ const catalogs: Record<
     AREA_NAME_ALREADY_EXISTS: 'El área ya existe',
     AREA_NOT_FOUND: 'Área no encontrada',
 
+    SPECIALTY_NAME_ALREADY_EXISTS: 'La especialidad ya existe',
+    SPECIALTY_NOT_FOUND: 'Especialidad no encontrada',
+
     USER_EMAIL_ALREADY_EXISTS: 'El correo ya está registrado',
     USER_INVALID_AREAS:
       'Una o más áreas no son válidas o están inactivas',
