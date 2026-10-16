@@ -53,8 +53,10 @@ const catalogs: Record<
 
     INVITATION_INVALID_TOKEN: 'El token de invitación no es válido',
     INVITATION_ALREADY_USED: 'La invitación ya fue utilizada',
-    INVITATION_REVOKED: 'La invitación fue revocada',
-    INVITATION_EXPIRED: 'La invitación expiró',
+    INVITATION_REVOKED:
+      'Tu invitación fue revocada. Solicita al administrador que te envíe una nueva',
+    INVITATION_EXPIRED:
+      'Tu invitación ha caducado. Solicita al administrador que te envíe una nueva',
     INVITATION_NOT_FOUND: 'Invitación no encontrada',
 
     PASSWORD_CONFIRMATION_MISMATCH:

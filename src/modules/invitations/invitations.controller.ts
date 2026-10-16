@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   Param,
@@ -72,6 +73,8 @@ import {
 } from './invitations.service.js'
 import { ResendInvitationResponseDto } from './dto/resend-invitation-response.dto.js'
 import { RevokeInvitationResponseDto } from './dto/revoke-invitation-response.dto.js'
+import { ValidateInvitationDto } from './dto/validate-invitation.dto.js'
+import { ValidateInvitationResponseDto } from './dto/validate-invitation-response.dto.js'
 import { AccessTokenGuard } from '../auth/guards/access-token.guard.js'
 import { PERMISSIONS } from '../access/constants/access.constants.js'
 import { RequirePermissions } from '../access/decorators/require-permissions.decorator.js'
@@ -175,6 +178,45 @@ export class InvitationsController {
       )
   }
 
+  @Post('validate')
+  @HttpCode(HttpStatus.OK)
+  @Header('Cache-Control', 'no-store')
+  @ApiOperation({
+    summary: 'Validate an invitation before showing the password form',
+    description: 'Public endpoint. Does not consume the invitation or activate the user.'
+  })
+  @ApiSuccessResponse(ValidateInvitationResponseDto)
+  @ApiErrorResponse({
+    status: HttpStatus.BAD_REQUEST,
+    code: ERROR_CODES.VALIDATION_ERROR,
+    message: 'Validation failed'
+  })
+  @ApiErrorResponse({
+    status: HttpStatus.BAD_REQUEST,
+    code: ERROR_CODES.INVITATION_INVALID_TOKEN,
+    message: errorMessage(ERROR_CODES.INVITATION_INVALID_TOKEN)
+  })
+  @ApiErrorResponse({
+    status: HttpStatus.CONFLICT,
+    code: ERROR_CODES.INVITATION_ALREADY_USED,
+    message: errorMessage(ERROR_CODES.INVITATION_ALREADY_USED)
+  })
+  @ApiErrorResponse({
+    status: HttpStatus.GONE,
+    code: ERROR_CODES.INVITATION_REVOKED,
+    message: errorMessage(ERROR_CODES.INVITATION_REVOKED)
+  })
+  @ApiErrorResponse({
+    status: HttpStatus.GONE,
+    code: ERROR_CODES.INVITATION_EXPIRED,
+    message: errorMessage(ERROR_CODES.INVITATION_EXPIRED)
+  })
+  validate(
+    @Body() dto: ValidateInvitationDto
+  ): Promise<ValidateInvitationResponseDto> {
+    return this.invitationsService.validateInvitationToken(dto)
+  }
+
   @Post('accept')
   @ApiOperation({
     summary:
@@ -213,6 +255,11 @@ export class InvitationsController {
         .INVITATION_EXPIRED,
     message:
       errorMessage(ERROR_CODES.INVITATION_EXPIRED)
+  })
+  @ApiErrorResponse({
+    status: HttpStatus.GONE,
+    code: ERROR_CODES.INVITATION_REVOKED,
+    message: errorMessage(ERROR_CODES.INVITATION_REVOKED)
   })
   async accept(
     @Body()
