@@ -94,6 +94,8 @@ import {
 } from './repositories/invitations.repository.js'
 import { ResendInvitationResponseDto } from './dto/resend-invitation-response.dto.js'
 import { RevokeInvitationResponseDto } from './dto/revoke-invitation-response.dto.js'
+import { ValidateInvitationDto } from './dto/validate-invitation.dto.js'
+import { ValidateInvitationResponseDto } from './dto/validate-invitation-response.dto.js'
 
 interface CreateInvitationResult {
   invitation: Invitation
@@ -301,6 +303,21 @@ export class InvitationsService {
         result.invitation.expiresAt,
 
       emailSent
+    }
+  }
+
+  async validateInvitationToken(
+    dto: ValidateInvitationDto
+  ): Promise<ValidateInvitationResponseDto> {
+    const invitation = await this.invitationsRepository.findByTokenHash(
+      this.hashToken(dto.token)
+    )
+
+    this.validateInvitation(invitation)
+
+    return {
+      valid: true,
+      expiresAt: invitation.expiresAt
     }
   }
 
@@ -545,7 +562,7 @@ export class InvitationsService {
     const expiresAt =
       new Date(
         Date.now() +
-        24 * 60 * 60 * 1000
+        3 * 24 * 60 * 60 * 1000
       )
 
     const invitation =
